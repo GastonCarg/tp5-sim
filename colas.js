@@ -1,4 +1,7 @@
 
+const NOMBRES_TRABAJOS = ["Cambio de placa", "Ampliacion de memoria", "Formateo de disco", "Agregar CD o DVD", "Cambio de memoria"];
+const LETRAS_TRABAJOS = ["A", "B", "C", "D", "E"];
+
 const tomarInputs = () => {
     const x = parseFloat(document.getElementById("time-sim").value);
     const n = parseInt(document.getElementById("n").value);
@@ -14,19 +17,19 @@ const tomarInputs = () => {
 
     // probabilidades tiempos trabajos
     const trab_a = parseFloat(
-        document.getElementById("trab_a").value
+        document.getElementById("trab-a").value
     );
     const trab_b = parseFloat(
-        document.getElementById("trab_b").value
+        document.getElementById("trab-b").value
     );
     const trab_c = parseFloat(
-        document.getElementById("trab_c").value
+        document.getElementById("trab-c").value
     );
     const trab_d = parseFloat(
-        document.getElementById("trab_d").value
+        document.getElementById("trab-d").value
     );
     const trab_e = parseFloat(
-        document.getElementById("trab_e").value
+        document.getElementById("trab-e").value
     );
     if (
         isNaN(trab_a) ||
@@ -96,6 +99,14 @@ const tomarInputs = () => {
     )
         return alert("Los tiempos deben ser mayores a 0.");
 
+    const tiempos_trabajos = [
+        time_trab_a,
+        time_trab_b,
+        time_trab_c,
+        time_trab_d,
+        time_trab_e,
+    ];
+
     // Tiempo que se suma a los valores de los trabajos
     const distrib_trab_a = parseInt(document.getElementById("distrib-trab-a").value);
     const distrib_trab_b = parseInt(document.getElementById("distrib-trab-b").value);
@@ -105,11 +116,6 @@ const tomarInputs = () => {
         isNaN(distrib_trab_b)
     )
         return alert("Por favor, ingrese todos los datos.");
-    if (
-        distrib_trab_a < 0 ||
-        distrib_trab_b < 0
-    )
-        return alert("Los valores de A y B deben ser mayores a 0.");
 
     if (distrib_trab_a >= distrib_trab_b)
         return alert("El valor de A debe ser menor al valor de B.");
@@ -132,18 +138,18 @@ const tomarInputs = () => {
     )
         return alert("La suma de los primeros y ultimos minutos debe ser menor al tiempo del trabajo.");
 
+    const trabajos = generarTrabajos(prob_acum_trabajos, tiempos_trabajos);
+
     return [
         n,
         x,
         desde,
         hasta,
-        prob_acum_trabajos,
-        time_trab_a,
-        time_trab_b,
-        time_trab_c,
-        time_trab_d,
-        time_trab_e,
-
+        distrib_trab_a,
+        distrib_trab_b,
+        prim_min_trab_c,
+        ult_min_trab_c,
+        trabajos
     ];
 };
 
@@ -153,9 +159,59 @@ const calcularProbabilidadAcumulada = (probs) => {
 
     for (let i = 0; i < probs.length; i++) {
         acu += probs[i];
+        // hago este toFixed para que se redondee a 2 decimales
+        acu = +(acu).toFixed(12);
         probs_acum[i] = acu;
     }
 
     return probs_acum;
 };
 
+// Genera una lista de trabajos con sus respectivas probabilidades
+const generarTrabajos = (probAcum, tiempos_trabajos) => {
+    let trabajos = [];
+    let trabajo = {
+        prob: 0,
+        time: 0,
+        nombre: "",
+        letra: "",
+    };
+
+    for (let i = 0; i < probAcum.length; i++) {
+        trabajo = {
+            prob: probAcum[i],
+            tiempo: tiempos_trabajos[i],
+            nombre: NOMBRES_TRABAJOS[i],
+            letra: LETRAS_TRABAJOS[i],
+        }
+
+        trabajos.push(trabajo);
+    }
+
+    return trabajos;
+};
+
+// Obtenemos el trabajo que se va a realizar
+const obtenerTrabajo = (trabajos, nroRand) => {
+    let trabajo = {};
+
+    for (let i = 0; i < trabajos.length; i++) {
+        if (nroRand < trabajos[i].prob) {
+            trabajo = trabajos[i];
+            break;
+        }
+    }
+
+    return trabajo;
+};
+
+const generacionColas = (x, n) => {
+    let vectorEstado = [];
+    // Recorremos por la cantidad de filas
+    for (let i = 0; i < n; i++) {
+        // if la iteración es mayor a la cantidad de minutos a simular cortamos la simulacion
+        if (i > x) return;
+
+
+    }
+};
