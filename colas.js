@@ -159,12 +159,3 @@ const calcularProbabilidadAcumulada = (probs) => {
     return probs_acum;
 };
 
-const armarIntervalos = () => {
-    let lim_inf = 0;
-    let lim_sup = 0;
-    let lim_superiores = [];
-    let lim_inferiores = [];
-    let prob_acum = 0;
-
-    return intervalos;
-}
