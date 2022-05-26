@@ -345,12 +345,10 @@ const generacionColas = (
                     
                     //Preguntamos que servidor esta libre
                     let aux = [];
-                    [aux, colaTrabajos] = validarTecnicoTomaTrabajo([...vectorEstado], colaTrabajos, reloj);
-                    console.log(aux[15])
-                    console.log(aux[16])
+                    [aux, colaTrabajos] = validarTecnicoTomaTrabajo([...vectorEstado], colaTrabajos, reloj, fin_reparacion);
                     
-                    proximo_fin_reparacion_t1 = fin_reparacion + reloj;
-                    proximo_fin_reparacion_t2 = fin_reparacion + reloj;
+                    proximo_fin_reparacion_t1 = aux[9];
+                    proximo_fin_reparacion_t2 = aux[10];
                     
 
                     vectorEstado[0] = "Llegada computadora";
@@ -413,25 +411,18 @@ const generacionColas = (
     return filas;
 };
 
-const validarTecnicoTomaTrabajo = (vectorEstado, cola, reloj) => {
+const validarTecnicoTomaTrabajo = (vectorEstado, cola, reloj, fin_reparacion) => {
     // Validamos cual es el tecnico que tomará el trabajo o lo agregamos a la cola.
     if (vectorEstado[15] === "Libre" && vectorEstado[18] === "Libre") {
-        console.log(reloj);
-        console.log(vectorEstado[15])
-        console.log(vectorEstado[16])
-        console.log(vectorEstado[18])
         let rnd_tec = truncateDecimals(Math.random(), 2);
-        console.log(rnd_tec)
         if (rnd_tec < 0.5) {
+            vectorEstado[9] = reloj + fin_reparacion;
             vectorEstado[15] = "Ocupado";
             vectorEstado[16] = reloj;
-            vectorEstado[18] = "Libre";
-            vectorEstado[19] = 0;
         }
 
         else{
-            vectorEstado[15] = "Libre";
-            vectorEstado[16] = 0;
+            vectorEstado[10] = reloj + fin_reparacion;
             vectorEstado[18] = "Ocupado";
             vectorEstado[19] = reloj;
         }
@@ -439,36 +430,23 @@ const validarTecnicoTomaTrabajo = (vectorEstado, cola, reloj) => {
     }
 
     else if (vectorEstado[15] === "Libre"  && vectorEstado[18] === "Ocupado") {
+        vectorEstado[9] = reloj + fin_reparacion;
         vectorEstado[15] = "Ocupado";
         vectorEstado[16] = reloj;
-        vectorEstado[18] = "Ocupado";
-        vectorEstado[19] = reloj;
     }
 
     else if (vectorEstado[15] === "Ocupado" && vectorEstado[18] === "Libre") {
-        vectorEstado[15] = "Ocupado";
-        vectorEstado[16] = reloj;
+        vectorEstado[10] = reloj + fin_reparacion;
         vectorEstado[18] = "Ocupado";
         vectorEstado[19] = reloj;
     }
     else cola++;
 
-    console.log(reloj);
-    console.log(vectorEstado[15])
-    console.log(vectorEstado[16])
-
-
     return [vectorEstado, cola];
 }
 
 const determinarProxFinReparacionTecnico = () => {
-    [vectorEstado, cola] = validarTecnicoTomaTrabajo(vectorEstado, cola, reloj)
-    if (aux[15] == "Ocupado" && aux[18] == "Libre"){
-        proximo_fin_reparacion_t1 = fin_reparacion + reloj;
-    }
-    else if(aux[15] == "Libre" && aux[18] == "Ocupado"){
-        proximo_fin_reparacion_t2 = fin_reparacion + reloj;
-    }
+
 }
 
 /**
