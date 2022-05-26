@@ -265,14 +265,20 @@ const generacionColas = (
     vectorEstado[8] = tiempo_fin_reparacion
     vectorEstado[9] = fin_reparacion_t1
     vectorEstado[10] = fin_reparacion_t2
-    vectorEstado[11] = estado_t1
-    vectorEstado[12] = hora_ocupacion_t1
-    vectorEstado[13] = estado_t2
-    vectorEstado[14] = hora_ocupacion_t2
-    vectorEstado[15] = cola
-    vectorEstado[16] = acum_tiempo_permanencia
-    vectorEstado[17] = acum_equipos
-    vectorEstado[18] = acum_tiempo_ocupacion
+    vectorEstado[11] = liberacion_formateo
+    vectorEstado[12] = ocupacion_formateo
+    vectorEstado[13] = tiempo_fin_reparacion_formateo(e1)
+    vectorEstado[14] = tiempo_fin_reparacion_formateo(e2)
+    vectorEstado[15] = estado_t1
+    vectorEstado[16] = hora_ocupacion_t1
+    vectorEstado[17] = tiempo_remanente_t1
+    vectorEstado[18] = estado_t2
+    vectorEstado[19] = hora_ocupacion_t2
+    vectorEstado[20] = tiempo_remanente_t2
+    vectorEstado[21] = cola
+    vectorEstado[22] = acum_tiempo_permanencia
+    vectorEstado[23] = acum_equipos
+    vectorEstado[24] = acum_tiempo_ocupacion
     */
     const vectorEstado = new Array();
     vectorEstado[0] = "";
@@ -286,14 +292,19 @@ const generacionColas = (
     vectorEstado[8] = "";
     vectorEstado[9] = "";
     vectorEstado[10] = "";
-    vectorEstado[11] = "Libre";
+    vectorEstado[11] = "";
     vectorEstado[12] = "";
-    vectorEstado[13] = "Libre";
+    vectorEstado[13] = "";
     vectorEstado[14] = "";
-    vectorEstado[15] = 0
-    vectorEstado[16] = 0
-    vectorEstado[17] = 0
-    vectorEstado[18] = 0
+    vectorEstado[15] = "Libre";
+    vectorEstado[16] = 0;
+    vectorEstado[17] = 0;
+    vectorEstado[18] = "Libre";
+    vectorEstado[19] = 0;
+    vectorEstado[20] = 0;
+    vectorEstado[21] = 0;
+    vectorEstado[22] = 0;
+    vectorEstado[23] = 0;
 
     // recorrer por la cantidad de filas
     // TODO: Ver que puede cortar antes, si llega al valor de X!!!!!!!!!!!!!!!!!!!!!!
@@ -331,9 +342,16 @@ const generacionColas = (
                     //Trabajamos con el fin de reparacion del trabajo
                     rnd_fin_reparacion = truncateDecimals(Math.random(), 2);
                     fin_reparacion = generadorUniforme(distrib_trab_a, distrib_trab_b, rnd_fin_reparacion) + 50; //!!!!!Trunque el 50. Hay que obtener el tiempo del trabajo.
-
+                    
+                    //Preguntamos que servidor esta libre
                     let aux = [];
                     [aux, colaTrabajos] = validarTecnicoTomaTrabajo([...vectorEstado], colaTrabajos, reloj);
+                    console.log(aux[15])
+                    console.log(aux[16])
+                    
+                    proximo_fin_reparacion_t1 = fin_reparacion + reloj;
+                    proximo_fin_reparacion_t2 = fin_reparacion + reloj;
+                    
 
                     vectorEstado[0] = "Llegada computadora";
                     vectorEstado[1] = reloj;
@@ -344,10 +362,12 @@ const generacionColas = (
                     vectorEstado[6] = trabajo;
                     vectorEstado[7] = rnd_fin_reparacion;
                     vectorEstado[8] = fin_reparacion;
-                    vectorEstado[11] = aux[11];
-                    vectorEstado[12] = aux[12];
-                    vectorEstado[13] = aux[13];
-                    vectorEstado[14] = aux[14];
+                    vectorEstado[9] = proximo_fin_reparacion_t1;
+                    vectorEstado[10] = proximo_fin_reparacion_t2;
+                    vectorEstado[15] = aux[15];
+                    vectorEstado[16] = aux[16];
+                    vectorEstado[18] = aux[18];
+                    vectorEstado[19] = aux[19];
                 }
             }
             else if (vectorEstado[9] < vectorEstado[10] || vectorEstado[10] === "") {
@@ -395,24 +415,60 @@ const generacionColas = (
 
 const validarTecnicoTomaTrabajo = (vectorEstado, cola, reloj) => {
     // Validamos cual es el tecnico que tomará el trabajo o lo agregamos a la cola.
-    if (vectorEstado[11] === "Libre" && vectorEstado[13] === "Libre") {
+    if (vectorEstado[15] === "Libre" && vectorEstado[18] === "Libre") {
+        console.log(reloj);
+        console.log(vectorEstado[15])
+        console.log(vectorEstado[16])
+        console.log(vectorEstado[18])
         let rnd_tec = truncateDecimals(Math.random(), 2);
+        console.log(rnd_tec)
         if (rnd_tec < 0.5) {
-            vectorEstado[11] = "Ocupado";
-            vectorEstado[12] = reloj;
+            vectorEstado[15] = "Ocupado";
+            vectorEstado[16] = reloj;
+            vectorEstado[18] = "Libre";
+            vectorEstado[19] = 0;
         }
+
+        else{
+            vectorEstado[15] = "Libre";
+            vectorEstado[16] = 0;
+            vectorEstado[18] = "Ocupado";
+            vectorEstado[19] = reloj;
+        }
+        
     }
-    else if (vectorEstado[11] === "Libre") {
-        vectorEstado[11] = "Ocupado";
-        vectorEstado[12] = reloj;
+
+    else if (vectorEstado[15] === "Libre"  && vectorEstado[18] === "Ocupado") {
+        vectorEstado[15] = "Ocupado";
+        vectorEstado[16] = reloj;
+        vectorEstado[18] = "Ocupado";
+        vectorEstado[19] = reloj;
     }
-    else if (vectorEstado[13] === "Libre") {
-        vectorEstado[13] = "Ocupado";
-        vectorEstado[14] = reloj;
+
+    else if (vectorEstado[15] === "Ocupado" && vectorEstado[18] === "Libre") {
+        vectorEstado[15] = "Ocupado";
+        vectorEstado[16] = reloj;
+        vectorEstado[18] = "Ocupado";
+        vectorEstado[19] = reloj;
     }
     else cola++;
 
+    console.log(reloj);
+    console.log(vectorEstado[15])
+    console.log(vectorEstado[16])
+
+
     return [vectorEstado, cola];
+}
+
+const determinarProxFinReparacionTecnico = () => {
+    [vectorEstado, cola] = validarTecnicoTomaTrabajo(vectorEstado, cola, reloj)
+    if (aux[15] == "Ocupado" && aux[18] == "Libre"){
+        proximo_fin_reparacion_t1 = fin_reparacion + reloj;
+    }
+    else if(aux[15] == "Libre" && aux[18] == "Ocupado"){
+        proximo_fin_reparacion_t2 = fin_reparacion + reloj;
+    }
 }
 
 /**
@@ -564,7 +620,7 @@ const simular = () => {
             suppressMenu: true,
         },
         {
-            field: "hora_ocupacion_t2",
+            field: "hora_ocupacion_t1",
             headerName: "Hora ocupacion (T1)",
             maxWidth: 140,
             suppressMenu: true,
@@ -696,7 +752,7 @@ const crearFila = (vectorEstado) => {
         fin_formateo_e1: vectorEstado[13],
         fin_formateo_e2: vectorEstado[14],
         estado_t1: vectorEstado[15],
-        hora_ocupacion_t2: vectorEstado[16],
+        hora_ocupacion_t1: vectorEstado[16],
         tiempo_remanente_t1: vectorEstado[17],
         estado_t2: vectorEstado[18],
         hora_ocupacion_t2: vectorEstado[19],
