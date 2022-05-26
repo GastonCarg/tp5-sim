@@ -200,6 +200,11 @@ const generadorUniforme = (a, b, rnd) => {
     return truncateDecimals(tiempo_proximo_evento, 2);
 };
 
+const determinarTiempoFinReparacionPC = (rnd, trabajo) => {
+    return trabajo.tiempo;
+    
+};
+
 const determinarTiempoLlegada = (rnd, trabajos) => {
     for (let i = 0; i < trabajos.length; i++) {
         if (rnd <= trabajos[i].prob) {
@@ -321,7 +326,11 @@ const generacionColas = (
 
                     //Debemos tirar un rnd para ver a que trabajo pertenece la llegada de la PC
                     rnd_trabajo = truncateDecimals(Math.random(), 2);
-                    trabajo = obtenerTrabajo(rnd_trabajo, trabajos); //trabajos de la linea 137?
+                    trabajo = obtenerTrabajo(rnd_trabajo, trabajos);
+
+                    //Trabajamos con el fin de reparacion del trabajo
+                    rnd_fin_reparacion = truncateDecimals(Math.random(), 2);
+                    fin_reparacion = generadorUniforme(distrib_trab_a, distrib_trab_b, rnd_fin_reparacion) + 50; //!!!!!Trunque el 50. Hay que obtener el tiempo del trabajo.
 
                     let aux = [];
                     [aux, colaTrabajos] = validarTecnicoTomaTrabajo([...vectorEstado], colaTrabajos, reloj);
@@ -333,6 +342,8 @@ const generacionColas = (
                     vectorEstado[4] = proxima_llegada;
                     vectorEstado[5] = rnd_trabajo;
                     vectorEstado[6] = trabajo;
+                    vectorEstado[7] = rnd_fin_reparacion;
+                    vectorEstado[8] = fin_reparacion;
                     vectorEstado[11] = aux[11];
                     vectorEstado[12] = aux[12];
                     vectorEstado[13] = aux[13];
