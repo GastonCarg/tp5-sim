@@ -196,9 +196,9 @@ const obtenerTrabajo = (rnd, trabajos) => {
     }
 };
 
-const generarRndLlegada = (a, b) => {
-    let rnd = a + Math.random() * (b - a);
-    return truncateDecimals(rnd, 4);
+const generadorUniforme = (a, b, rnd) => {
+    let tiempo_proximo_evento = a + rnd * (b - a);
+    return truncateDecimals(tiempo_proximo_evento, 2);
 };
 
 const determinarTiempoLlegada = (rnd, trabajos) => {
@@ -242,6 +242,10 @@ const generacionColas = (
     let fin_reparacion = 0;
     let proximo_fin_reparacion_t1 = 0;
     let proximo_fin_reparacion_t2 = 0;
+    let tiempo_entre_llegadas = "";
+    let reloj = 0;
+    let colaTrabajos = 0;
+    let colaFormateos = [];
 
     let filas = [];
 
@@ -249,55 +253,115 @@ const generacionColas = (
     vectorEstado[0] = evento
     vectorEstado[1] = reloj
     vectorEstado[2] = rnd_llegada
-    vectorEstado[3] = llegada
+    vectorEstado[3] = tiempo_entre_llegadas
     vectorEstado[4] = proxima_llegada
     vectorEstado[5] = rnd_trabajo
     vectorEstado[6] = trabajo
     vectorEstado[7] = rnd_fin_reparacion
-    vectorEstado[8] = fin_reparacion
-    vectorEstado[9] = proximo_fin_reparacion_t1
-    vectorEstado[10] = proximo_fin_reparacion_t2
-    vectorEstado[11] = liberacion_formateo
-    vectorEstado[12] = ocupacion_formateo
-    vectorEstado[13] = fin_formateo_e1
-    vectorEstado[14] = fin_formateo_e2
-    vectorEstado[15] = estado_t1
-    vectorEstado[16] = hora_ocupacion_t2
-    vectorEstado[17] = tiempo_remanente_t1
-    vectorEstado[18] = estado_t2
-    vectorEstado[19] = hora_ocupacion_t2
-    vectorEstado[20] = tiempo_remanente_t2
-    vectorEstado[21] = cola
-    vectorEstado[22] = acum_tiempo_permanencia
-    vectorEstado[23] = acum_equipos
-    vectorEstado[24] = acum_tiempo_ocupacion
+    vectorEstado[8] = tiempo_fin_reparacion
+    vectorEstado[9] = fin_reparacion_t1
+    vectorEstado[10] = fin_reparacion_t2
+    vectorEstado[11] = estado_t1
+    vectorEstado[12] = hora_ocupacion_t1
+    vectorEstado[13] = estado_t2
+    vectorEstado[14] = hora_ocupacion_t2
+    vectorEstado[15] = cola
+    vectorEstado[16] = acum_tiempo_permanencia
+    vectorEstado[17] = acum_equipos
+    vectorEstado[18] = acum_tiempo_ocupacion
     */
-    const vectorEstado = new Array(25);
-    console.log(trabajos);
+    const vectorEstado = new Array();
+    vectorEstado[0] = "";
+    vectorEstado[1] = 0;
+    vectorEstado[2] = "";
+    vectorEstado[3] = "";
+    vectorEstado[4] = "";
+    vectorEstado[5] = "";
+    vectorEstado[6] = "";
+    vectorEstado[7] = "";
+    vectorEstado[8] = "";
+    vectorEstado[9] = "";
+    vectorEstado[10] = "";
+    vectorEstado[11] = "Libre";
+    vectorEstado[12] = "";
+    vectorEstado[13] = "Libre";
+    vectorEstado[14] = "";
+    vectorEstado[15] = 0
+    vectorEstado[16] = 0
+    vectorEstado[17] = 0
+    vectorEstado[18] = 0
 
     // recorrer por la cantidad de filas
-    for (let i = 0; i < n; i++) {
-        // generar rnd llegada con a = 0.5 y b = 1.5 (segun enunciado)
-        rnd_llegada = generarRndLlegada(0.5, 1.5);
+    // TODO: Ver que puede cortar antes, si llega al valor de X!!!!!!!!!!!!!!!!!!!!!!
+    // for (let i = 0; i < n; i++) {
+    for (let i = 0; i < 2; i++) {
 
-        // determinar tiempo de llegada
-        llegada = determinarTiempoLlegada(rnd_llegada, trabajos);
+        if (i === 0) {
+            rnd_llegada = truncateDecimals(Math.random(), 2);
+            tiempo_entre_llegadas = generadorUniforme(30, 90, rnd_llegada);
+            proxima_llegada = tiempo_entre_llegadas;
 
-        proxima_llegada += llegada;
+            vectorEstado[0] = "Inicio";
+            vectorEstado[1] = 0;
+            vectorEstado[2] = rnd_llegada;
+            vectorEstado[3] = tiempo_entre_llegadas;
+            vectorEstado[4] = proxima_llegada;
+        }
+        else {
+            // validamos cuál es el evento que llega primero.
+            // TODO: Debemos preguntar si dos eventos llegan al mismo tiempo, cuál se debe tomar primero
 
-        // generar rnd de trabajo
-        rnd_trabajo = generarRndTrabajo();
+            if (vectorEstado[4] < vectorEstado[9] || vectorEstado[9] === "") {
+                if (vectorEstado[4] < vectorEstado[10] || vectorEstado[10] === "") {
+                    // TODO: Debemos recorrer las computadoras y validar cuál es el evento que llega primero.
 
-        // determinar trabajo
-        trabajo = obtenerTrabajo(rnd_trabajo, trabajos);
+                    reloj = vectorEstado[4];
+                    rnd_llegada = truncateDecimals(Math.random(), 2);
+                    tiempo_entre_llegadas = generadorUniforme(30, 90, rnd_llegada);
+                    proxima_llegada = tiempo_entre_llegadas + reloj;
 
-        // generar rnd fin reparacion
-        rnd_fin_reparacion = generarRndFinReparacion();
+                    let aux = [];
+                    [aux, colaTrabajos] = validarTecnicoTomaTrabajo([...vectorEstado], colaTrabajos, reloj);
 
-        // determinar tiempo fin reparacion
-        fin_reparacion = determinarTiempoFinReparacion(rnd_fin_reparacion);
+                    vectorEstado[0] = "Llegada computadora";
+                    vectorEstado[1] = reloj;
+                    vectorEstado[2] = rnd_llegada;
+                    vectorEstado[3] = tiempo_entre_llegadas;
+                    vectorEstado[4] = proxima_llegada;
+                    vectorEstado[11] = aux[11];
+                    vectorEstado[12] = aux[12];
+                    vectorEstado[13] = aux[13];
+                    vectorEstado[14] = aux[14];
+                }
+            }
+            else if (vectorEstado[9] < vectorEstado[10] || vectorEstado[10] === "") {
+                // TODO: Debemos recorrer las computadoras y validar cuál es el evento que llega primero.
+                vectorEstado[0] = "Fin reparación computadora";
+            }
+            else {
+                // TODO: Debemos recorrer las computadoras y validar cuál es el evento que llega primero.
+                vectorEstado[0] = "Fin reparación computadora";
+            }
 
-        proximo_fin_reparacion_t1 += fin_reparacion;
+            // determinar tiempo de llegada
+            // llegada = determinarTiempoLlegada(rnd_llegada, trabajos);
+
+            // proxima_llegada += llegada;
+
+            // // generar rnd de trabajo
+            // rnd_trabajo = generarRndTrabajo();
+
+            // // determinar trabajo
+            // trabajo = obtenerTrabajo(rnd_trabajo, trabajos);
+
+            // // generar rnd fin reparacion
+            // rnd_fin_reparacion = generarRndFinReparacion();
+
+            // // determinar tiempo fin reparacion
+            // fin_reparacion = determinarTiempoFinReparacion(rnd_fin_reparacion);
+
+            // proximo_fin_reparacion_t1 += fin_reparacion;
+        }
 
         // agregar filas desdeHasta
         if (i + 1 >= desde && i + 1 <= hasta) {
@@ -312,6 +376,28 @@ const generacionColas = (
 
     return filas;
 };
+
+const validarTecnicoTomaTrabajo = (vectorEstado, cola, reloj) => {
+    // Validamos cual es el tecnico que tomará el trabajo o lo agregamos a la cola.
+    if (vectorEstado[11] === "Libre" && vectorEstado[13] === "Libre") {
+        let rnd_tec = truncateDecimals(Math.random(), 2);
+        if (rnd_tec < 0.5) {
+            vectorEstado[11] = "Ocupado";
+            vectorEstado[12] = reloj;
+        }
+    }
+    else if (vectorEstado[11] === "Libre") {
+        vectorEstado[11] = "Ocupado";
+        vectorEstado[12] = reloj;
+    }
+    else if (vectorEstado[13] === "Libre") {
+        vectorEstado[13] = "Ocupado";
+        vectorEstado[14] = reloj;
+    }
+    else cola++;
+
+    return [vectorEstado, cola];
+}
 
 /**
  * Funcion principal que se encarga de llamar a las demas funciones y mostrar los resultados en la tabla
@@ -356,34 +442,44 @@ const simular = () => {
 
     let columnDefs = [
         {
-            field: "evento",
-            headerName: "Evento",
-            maxWidth: 140,
-            suppressMenu: true,
+            headerName: "",
+            children: [
+                {
+                    field: "evento",
+                    headerName: "Evento",
+                    maxWidth: 140,
+                    suppressMenu: true,
+                },
+                {
+                    field: "reloj",
+                    headerName: "Reloj",
+                    maxWidth: 140,
+                    suppressMenu: true,
+                },
+            ]
         },
         {
-            field: "reloj",
-            headerName: "Reloj",
-            maxWidth: 140,
-            suppressMenu: true,
-        },
-        {
-            field: "rnd_llegada",
-            headerName: "RND llegada",
-            maxWidth: 140,
-            suppressMenu: true,
-        },
-        {
-            field: "llegada",
-            headerName: "Tiempo llegada",
-            maxWidth: 140,
-            suppressMenu: true,
-        },
-        {
-            field: "proxima_llegada",
-            headerName: "Proxima llegada",
-            maxWidth: 140,
-            suppressMenu: true,
+            headerName: "Llegada Computadora",
+            children: [
+                {
+                    field: "rnd_llegada",
+                    headerName: "RND llegada",
+                    maxWidth: 140,
+                    suppressMenu: true,
+                },
+                {
+                    field: "llegada",
+                    headerName: "Tiempo llegada",
+                    maxWidth: 140,
+                    suppressMenu: true,
+                },
+                {
+                    field: "proxima_llegada",
+                    headerName: "Proxima llegada",
+                    maxWidth: 140,
+                    suppressMenu: true,
+                },
+            ]
         },
         {
             field: "rnd_trabajo",
@@ -508,6 +604,11 @@ const simular = () => {
     ];
 
     gridRandVarOptions = {
+        defaultColDef: {
+            sortable: true,
+            resizable: true,
+            filter: true,
+        },
         columnDefs,
         headerHeight: 100,
         rowData: tableData,
