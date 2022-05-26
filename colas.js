@@ -159,7 +159,7 @@ const calcularProbabilidadAcumulada = (probs) => {
         acu = +acu.toFixed(12);
         probs_acum[i] = acu;
     }
-
+    console.log(probs_acum);
     return probs_acum;
 };
 
@@ -180,10 +180,9 @@ const generarTrabajos = (probAcum, tiempos_trabajos) => {
             nombre: NOMBRES_TRABAJOS[i],
             letra: LETRAS_TRABAJOS[i],
         };
-
+        
         trabajos.push(trabajo);
     }
-
     return trabajos;
 };
 
@@ -320,6 +319,10 @@ const generacionColas = (
                     tiempo_entre_llegadas = generadorUniforme(30, 90, rnd_llegada);
                     proxima_llegada = tiempo_entre_llegadas + reloj;
 
+                    //Debemos tirar un rnd para ver a que trabajo pertenece la llegada de la PC
+                    rnd_trabajo = truncateDecimals(Math.random(), 2);
+                    trabajo = obtenerTrabajo(rnd_trabajo, trabajos); //trabajos de la linea 137?
+
                     let aux = [];
                     [aux, colaTrabajos] = validarTecnicoTomaTrabajo([...vectorEstado], colaTrabajos, reloj);
 
@@ -328,6 +331,8 @@ const generacionColas = (
                     vectorEstado[2] = rnd_llegada;
                     vectorEstado[3] = tiempo_entre_llegadas;
                     vectorEstado[4] = proxima_llegada;
+                    vectorEstado[5] = rnd_trabajo;
+                    vectorEstado[6] = trabajo;
                     vectorEstado[11] = aux[11];
                     vectorEstado[12] = aux[12];
                     vectorEstado[13] = aux[13];
