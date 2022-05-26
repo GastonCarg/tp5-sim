@@ -1,5 +1,20 @@
+const btnSimular = document.getElementById("btnSimular");
+const btnSimDelete = document.getElementById("btnSimDel");
+const lblCasoExito = document.getElementById("casoExito");
+const eGridDiv = document.getElementById("gridVariable");
+const btnExportToExcelRandVar = document.getElementById(
+    "btnExportToExcelRandVar"
+);
+let gridRandVarOptions = {};
 
-const NOMBRES_TRABAJOS = ["Cambio de placa", "Ampliacion de memoria", "Formateo de disco", "Agregar CD o DVD", "Cambio de memoria"];
+// variable globales
+const NOMBRES_TRABAJOS = [
+    "Cambio de placa",
+    "Ampliacion de memoria",
+    "Formateo de disco",
+    "Agregar CD o DVD",
+    "Cambio de memoria",
+];
 const LETRAS_TRABAJOS = ["A", "B", "C", "D", "E"];
 
 const tomarInputs = () => {
@@ -11,26 +26,16 @@ const tomarInputs = () => {
         return alert("X, N, DESDE, HASTA: los valores deben ser mayores a 0.");
     if (isNaN(x) || isNaN(n) || isNaN(desde) || isNaN(hasta))
         return alert("X/N/DESDE/HASTA: por favor, ingrese todos los datos.");
-    if (!Number.isInteger(x) && !Number.isInteger(n)){
+    if (!Number.isInteger(x) && !Number.isInteger(n)) {
         return alert("X y N deben ser enteros");
     }
 
     // probabilidades tiempos trabajos
-    const trab_a = parseFloat(
-        document.getElementById("trab-a").value
-    );
-    const trab_b = parseFloat(
-        document.getElementById("trab-b").value
-    );
-    const trab_c = parseFloat(
-        document.getElementById("trab-c").value
-    );
-    const trab_d = parseFloat(
-        document.getElementById("trab-d").value
-    );
-    const trab_e = parseFloat(
-        document.getElementById("trab-e").value
-    );
+    const trab_a = parseFloat(document.getElementById("trab-a").value);
+    const trab_b = parseFloat(document.getElementById("trab-b").value);
+    const trab_c = parseFloat(document.getElementById("trab-c").value);
+    const trab_d = parseFloat(document.getElementById("trab-d").value);
+    const trab_e = parseFloat(document.getElementById("trab-e").value);
     if (
         isNaN(trab_a) ||
         isNaN(trab_b) ||
@@ -54,18 +59,8 @@ const tomarInputs = () => {
         return alert(
             "las probabilidades deben ser valores entre 0 y 1 (sin incluir el 1)."
         );
-    if (
-        +(
-            trab_a +
-            trab_b +
-            trab_c +
-            trab_d +
-            trab_e
-        ).toFixed(12) != 1
-    )
-        return alert(
-            "La sumatoria de las probabilidades debe ser igual a 1."
-        );
+    if (+(trab_a + trab_b + trab_c + trab_d + trab_e).toFixed(12) != 1)
+        return alert("La sumatoria de las probabilidades debe ser igual a 1.");
 
     const prob_acum_trabajos = calcularProbabilidadAcumulada([
         trab_a,
@@ -108,35 +103,36 @@ const tomarInputs = () => {
     ];
 
     // Tiempo que se suma a los valores de los trabajos
-    const distrib_trab_a = parseInt(document.getElementById("distrib-trab-a").value);
-    const distrib_trab_b = parseInt(document.getElementById("distrib-trab-b").value);
+    const distrib_trab_a = parseInt(
+        document.getElementById("distrib-trab-a").value
+    );
+    const distrib_trab_b = parseInt(
+        document.getElementById("distrib-trab-b").value
+    );
 
-    if (
-        isNaN(distrib_trab_a) ||
-        isNaN(distrib_trab_b)
-    )
+    if (isNaN(distrib_trab_a) || isNaN(distrib_trab_b))
         return alert("Por favor, ingrese todos los datos.");
 
     if (distrib_trab_a >= distrib_trab_b)
         return alert("El valor de A debe ser menor al valor de B.");
 
     // Minutos antes y despues del trabajo de formateo
-    const prim_min_trab_c = parseInt(document.getElementById("prim-min-trab-c").value);
-    const ult_min_trab_c = parseInt(document.getElementById("ult-min-trab-c").value);
-    if (
-        isNaN(prim_min_trab_c) ||
-        isNaN(ult_min_trab_c)
-    )
+    const prim_min_trab_c = parseInt(
+        document.getElementById("prim-min-trab-c").value
+    );
+    const ult_min_trab_c = parseInt(
+        document.getElementById("ult-min-trab-c").value
+    );
+    if (isNaN(prim_min_trab_c) || isNaN(ult_min_trab_c))
         return alert("Por favor, ingrese todos los datos.");
-    if (
-        prim_min_trab_c < 0 ||
-        ult_min_trab_c < 0
-    )
-        return alert("Los valores de los primeros y ultimos min deben ser mayores a 0.");
-    if (
-        (prim_min_trab_c + ult_min_trab_c) >= time_trab_c
-    )
-        return alert("La suma de los primeros y ultimos minutos debe ser menor al tiempo del trabajo.");
+    if (prim_min_trab_c < 0 || ult_min_trab_c < 0)
+        return alert(
+            "Los valores de los primeros y ultimos min deben ser mayores a 0."
+        );
+    if (prim_min_trab_c + ult_min_trab_c >= time_trab_c)
+        return alert(
+            "La suma de los primeros y ultimos minutos debe ser menor al tiempo del trabajo."
+        );
 
     const trabajos = generarTrabajos(prob_acum_trabajos, tiempos_trabajos);
 
@@ -149,7 +145,7 @@ const tomarInputs = () => {
         distrib_trab_b,
         prim_min_trab_c,
         ult_min_trab_c,
-        trabajos
+        trabajos,
     ];
 };
 
@@ -160,7 +156,7 @@ const calcularProbabilidadAcumulada = (probs) => {
     for (let i = 0; i < probs.length; i++) {
         acu += probs[i];
         // hago este toFixed para que se redondee a 2 decimales
-        acu = +(acu).toFixed(12);
+        acu = +acu.toFixed(12);
         probs_acum[i] = acu;
     }
 
@@ -172,7 +168,7 @@ const generarTrabajos = (probAcum, tiempos_trabajos) => {
     let trabajos = [];
     let trabajo = {
         prob: 0,
-        time: 0,
+        tiempo: 0,
         nombre: "",
         letra: "",
     };
@@ -183,7 +179,7 @@ const generarTrabajos = (probAcum, tiempos_trabajos) => {
             tiempo: tiempos_trabajos[i],
             nombre: NOMBRES_TRABAJOS[i],
             letra: LETRAS_TRABAJOS[i],
-        }
+        };
 
         trabajos.push(trabajo);
     }
@@ -192,26 +188,410 @@ const generarTrabajos = (probAcum, tiempos_trabajos) => {
 };
 
 // Obtenemos el trabajo que se va a realizar
-const obtenerTrabajo = (trabajos, nroRand) => {
-    let trabajo = {};
-
+const obtenerTrabajo = (rnd, trabajos) => {
     for (let i = 0; i < trabajos.length; i++) {
-        if (nroRand < trabajos[i].prob) {
-            trabajo = trabajos[i];
-            break;
+        if (rnd <= trabajos[i].prob) {
+            return trabajos[i].nombre;
+        }
+    }
+};
+
+const generarRndLlegada = (a, b) => {
+    let rnd = a + Math.random() * (b - a);
+    return truncateDecimals(rnd, 4);
+};
+
+const determinarTiempoLlegada = (rnd, trabajos) => {
+    for (let i = 0; i < trabajos.length; i++) {
+        if (rnd <= trabajos[i].prob) {
+            return trabajos[i].tiempo;
+        }
+    }
+};
+
+/**
+ *
+ * @param {number} n
+ * @param {number} x
+ * @param {number} desde
+ * @param {number} hasta
+ * @param {*} distrib_trab_a
+ * @param {*} distrib_trab_b
+ * @param {*} prim_min_trab_c
+ * @param {*} ult_min_trab_c
+ * @param {*} trabajos
+ * @returns
+ */
+const generacionColas = (
+    n,
+    x,
+    desde,
+    hasta,
+    distrib_trab_a,
+    distrib_trab_b,
+    prim_min_trab_c,
+    ult_min_trab_c,
+    trabajos
+) => {
+    let rnd_llegada = 0;
+    let llegada = 0;
+    let proxima_llegada = 0;
+    let rnd_trabajo = 0;
+    let trabajo = "";
+    let rnd_fin_reparacion = 0;
+    let fin_reparacion = 0;
+    let proximo_fin_reparacion_t1 = 0;
+    let proximo_fin_reparacion_t2 = 0;
+
+    let filas = [];
+
+    /*
+    vectorEstado[0] = evento
+    vectorEstado[1] = reloj
+    vectorEstado[2] = rnd_llegada
+    vectorEstado[3] = llegada
+    vectorEstado[4] = proxima_llegada
+    vectorEstado[5] = rnd_trabajo
+    vectorEstado[6] = trabajo
+    vectorEstado[7] = rnd_fin_reparacion
+    vectorEstado[8] = fin_reparacion
+    vectorEstado[9] = proximo_fin_reparacion_t1
+    vectorEstado[10] = proximo_fin_reparacion_t2
+    vectorEstado[11] = liberacion_formateo
+    vectorEstado[12] = ocupacion_formateo
+    vectorEstado[13] = fin_formateo_e1
+    vectorEstado[14] = fin_formateo_e2
+    vectorEstado[15] = estado_t1
+    vectorEstado[16] = hora_ocupacion_t2
+    vectorEstado[17] = tiempo_remanente_t1
+    vectorEstado[18] = estado_t2
+    vectorEstado[19] = hora_ocupacion_t2
+    vectorEstado[20] = tiempo_remanente_t2
+    vectorEstado[21] = cola
+    vectorEstado[22] = acum_tiempo_permanencia
+    vectorEstado[23] = acum_equipos
+    vectorEstado[24] = acum_tiempo_ocupacion
+    */
+    const vectorEstado = new Array(25);
+    console.log(trabajos);
+
+    // recorrer por la cantidad de filas
+    for (let i = 0; i < n; i++) {
+        // generar rnd llegada con a = 0.5 y b = 1.5 (segun enunciado)
+        rnd_llegada = generarRndLlegada(0.5, 1.5);
+
+        // determinar tiempo de llegada
+        llegada = determinarTiempoLlegada(rnd_llegada, trabajos);
+
+        proxima_llegada += llegada;
+
+        // generar rnd de trabajo
+        rnd_trabajo = generarRndTrabajo();
+
+        // determinar trabajo
+        trabajo = obtenerTrabajo(rnd_trabajo, trabajos);
+
+        // generar rnd fin reparacion
+        rnd_fin_reparacion = generarRndFinReparacion();
+
+        // determinar tiempo fin reparacion
+        fin_reparacion = determinarTiempoFinReparacion(rnd_fin_reparacion);
+
+        proximo_fin_reparacion_t1 += fin_reparacion;
+
+        // agregar filas desdeHasta
+        if (i + 1 >= desde && i + 1 <= hasta) {
+            filas.push([...vectorEstado]);
         }
     }
 
-    return trabajo;
+    // agregar ultima fila en caso que 'hasta' sea menor que la cantidad de filas
+    if (hasta < n) {
+        filas.push([...vectorEstado]);
+    }
+
+    return filas;
 };
 
-const generacionColas = (x, n) => {
-    let vectorEstado = [];
-    // Recorremos por la cantidad de filas
-    for (let i = 0; i < n; i++) {
-        // if la iteración es mayor a la cantidad de minutos a simular cortamos la simulacion
-        if (i > x) return;
+/**
+ * Funcion principal que se encarga de llamar a las demas funciones y mostrar los resultados en la tabla
+ * @returns {void}
+ */
+const simular = () => {
+    let tableData = [];
 
+    borrarTabla();
 
+    const [
+        n,
+        x,
+        desde,
+        hasta,
+        distrib_trab_a,
+        distrib_trab_b,
+        prim_min_trab_c,
+        ult_min_trab_c,
+        trabajos,
+    ] = tomarInputs();
+
+    try {
+        const filas = generacionColas(
+            n,
+            x,
+            desde,
+            hasta,
+            distrib_trab_a,
+            distrib_trab_b,
+            prim_min_trab_c,
+            ult_min_trab_c,
+            trabajos
+        );
+
+        // transformar el arreglo de 'vectoresEstado' a objetos 'fila' para ser visualizados en la tabla
+        filas.map((fila) => tableData.push(crearFila(fila)));
+    } catch (error) {
+        alert("Oops! Ha ocurrido un error");
+        console.log(error);
+    }
+
+    let columnDefs = [
+        {
+            field: "evento",
+            headerName: "Evento",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "reloj",
+            headerName: "Reloj",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "rnd_llegada",
+            headerName: "RND llegada",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "llegada",
+            headerName: "Tiempo llegada",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "proxima_llegada",
+            headerName: "Proxima llegada",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "rnd_trabajo",
+            headerName: "RND trabajo",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "trabajo",
+            headerName: "Trabajo",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "rnd_fin_reparacion",
+            headerName: "RND fin reparacion",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "fin_reparacion",
+            headerName: "Tiempo fin reparacion",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "proximo_fin_reparacion_t1",
+            headerName: "Proximo fin reparacion (T1)",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "proximo_fin_reparacion_t2",
+            headerName: "Proximo fin reparacion (T2)",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "liberacion_formateo",
+            headerName: "Liberacion formateo",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "ocupacion_formateo",
+            headerName: "Ocupacion formateo",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "fin_formateo_e1",
+            headerName: "Tiempo fin reparacion formateo (E1)",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "fin_formateo_e2",
+            headerName: "Tiempo fin reparacion formateo (E2)",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "estado_t1",
+            headerName: "Estado (T1)",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "hora_ocupacion_t2",
+            headerName: "Hora ocupacion (T1)",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "tiempo_remanente_t1",
+            headerName: "Tiempo remanente (T1)",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "estado_t2",
+            headerName: "Estado (T2)",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "hora_ocupacion_t2",
+            headerName: "Hora ocupacion (T2)",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "tiempo_remanente_t2",
+            headerName: "Tiempo remanente (T2)",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "cola",
+            headerName: "Cola",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "acum_tiempo_permanencia",
+            headerName: "Tiempo acumulado permanencia de equipo",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "acum_equipos",
+            headerName: "Cantidad equipos sin revision",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+        {
+            field: "acum_tiempo_ocupacion",
+            headerName: "Tiempo acumulado ocupacion de tecnicos",
+            maxWidth: 140,
+            suppressMenu: true,
+        },
+    ];
+
+    gridRandVarOptions = {
+        columnDefs,
+        headerHeight: 100,
+        rowData: tableData,
+    };
+
+    new agGrid.Grid(eGridDiv, gridRandVarOptions);
+
+    // setea el tamaño de las columnas para que se adapten al ancho del header
+    const allColumnIds = [];
+    gridRandVarOptions.columnApi.getAllColumns().forEach((column) => {
+        allColumnIds.push(column.getId());
+    });
+    gridRandVarOptions.columnApi.autoSizeColumns(allColumnIds);
+
+    btnExportToExcelRandVar.removeAttribute("hidden");
+};
+
+/**
+ * Funcion que se encarga de exportar la tabla a excel
+ */
+const exportarTablaExcel = () => {
+    gridRandVarOptions.api.exportDataAsExcel();
+};
+
+/**
+ * Funcion para truncar un numero a una cantidad de decimales, ambos pasados como parametros
+ * @param {number} number numero a truncar
+ * @param {number} digits cantidad de decimales a truncar
+ * @returns
+ */
+const truncateDecimals = (number, digits) => {
+    const multiplier = Math.pow(10, digits);
+    return Math.trunc(number * multiplier) / multiplier;
+};
+
+/**
+ * Funcion que se encarga de borrar la tabla
+ */
+const borrarTabla = () => {
+    const eGridDiv = document.querySelector("#gridVariable");
+
+    let child = eGridDiv.lastElementChild;
+    while (child) {
+        eGridDiv.removeChild(child);
+        child = eGridDiv.lastElementChild;
     }
 };
+
+/**
+ * Funcion que crea un objeto 'fila' a partir de un vectorEstado. Este objeto son los datos para la tabla
+ * @param {Array} vectorEstado[] arreglo de 'vectorEstado'
+ * @returns un objeto 'fila'
+ */
+const crearFila = (vectorEstado) => {
+    return {
+        evento: vectorEstado[0],
+        reloj: vectorEstado[1],
+        rnd_llegada: vectorEstado[2],
+        llegada: vectorEstado[3],
+        proxima_llegada: vectorEstado[4],
+        rnd_trabajo: vectorEstado[5],
+        trabajo: vectorEstado[6],
+        rnd_fin_reparacion: vectorEstado[7],
+        fin_reparacion: vectorEstado[8],
+        proximo_fin_reparacion_t1: vectorEstado[9],
+        proximo_fin_reparacion_t2: vectorEstado[10],
+        liberacion_formateo: vectorEstado[11],
+        ocupacion_formateo: vectorEstado[12],
+        fin_formateo_e1: vectorEstado[13],
+        fin_formateo_e2: vectorEstado[14],
+        estado_t1: vectorEstado[15],
+        hora_ocupacion_t2: vectorEstado[16],
+        tiempo_remanente_t1: vectorEstado[17],
+        estado_t2: vectorEstado[18],
+        hora_ocupacion_t2: vectorEstado[19],
+        tiempo_remanente_t2: vectorEstado[20],
+        cola: vectorEstado[21],
+        acum_tiempo_permanencia: vectorEstado[22],
+        acum_equipos: vectorEstado[23],
+        acum_tiempo_ocupacion: vectorEstado[24],
+    };
+};
+
+// Agregar los eventos a los botones
+btnSimDelete.addEventListener("click", borrarTabla);
+btnSimular.addEventListener("click", simular);
+btnExportToExcelRandVar.addEventListener("click", exportarTablaExcel);
