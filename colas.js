@@ -246,6 +246,8 @@ const generacionColas = (
     let fin_reparacion = 0;
     let proximo_fin_reparacion_t1 = 0;
     let proximo_fin_reparacion_t2 = 0;
+    let liberacion_formateo = 0;
+    let ocupacion_formateo = 0;
     let tiempo_entre_llegadas = "";
     let reloj = 0;
     let colaTrabajos = 0;
@@ -276,6 +278,7 @@ const generacionColas = (
     vectorEstado[19] = hora_ocupacion_t2
     vectorEstado[20] = tiempo_remanente_t2
     vectorEstado[21] = cola
+    //agregar cola de formateos por terminar?? tienen prioridad estas
     vectorEstado[22] = acum_tiempo_permanencia
     vectorEstado[23] = acum_equipos
     vectorEstado[24] = acum_tiempo_ocupacion
@@ -309,7 +312,7 @@ const generacionColas = (
     // recorrer por la cantidad de filas
     // TODO: Ver que puede cortar antes, si llega al valor de X!!!!!!!!!!!!!!!!!!!!!!
     // for (let i = 0; i < n; i++) {
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 5; i++) {
 
         if (i === 0) {
             rnd_llegada = truncateDecimals(Math.random(), 2);
@@ -341,14 +344,17 @@ const generacionColas = (
 
                     //Trabajamos con el fin de reparacion del trabajo
                     rnd_fin_reparacion = truncateDecimals(Math.random(), 2);
-                    fin_reparacion = generadorUniforme(distrib_trab_a, distrib_trab_b, rnd_fin_reparacion) + 50; //!!!!!Trunque el 50. Hay que obtener el tiempo del trabajo.
+                    fin_reparacion = generadorUniforme(distrib_trab_a, distrib_trab_b, rnd_fin_reparacion) + 180; //!!!!!Trunque el 50. Hay que obtener el tiempo del trabajo.
                     
                     //Preguntamos que servidor esta libre
                     let aux = [];
-                    [aux, colaTrabajos] = validarTecnicoTomaTrabajo([...vectorEstado], colaTrabajos, reloj, fin_reparacion);
+                    [aux, colaTrabajos] = validarTecnicoTomaTrabajo([...vectorEstado], colaTrabajos, reloj, fin_reparacion, trabajo);
                     
                     proximo_fin_reparacion_t1 = aux[9];
                     proximo_fin_reparacion_t2 = aux[10];
+                    
+                    //Determinamos la hora en que se va a liberar el tecnico en caso de que el trabajo sea formateo
+                    [liberacion_formateo, ocupacion_formateo] = determinarLiberacionYOcupacionTecnicoParaFormateo(trabajo, prim_min_trab_c, ult_min_trab_c, proximo_fin_reparacion_t1, proximo_fin_reparacion_t2, reloj);
                     
 
                     vectorEstado[0] = "Llegada computadora";
@@ -362,10 +368,13 @@ const generacionColas = (
                     vectorEstado[8] = fin_reparacion;
                     vectorEstado[9] = proximo_fin_reparacion_t1;
                     vectorEstado[10] = proximo_fin_reparacion_t2;
+                    vectorEstado[11] = liberacion_formateo;
+                    vectorEstado[12] = ocupacion_formateo;
                     vectorEstado[15] = aux[15];
                     vectorEstado[16] = aux[16];
                     vectorEstado[18] = aux[18];
                     vectorEstado[19] = aux[19];
+                    vectorEstado[21] = colaTrabajos;
                 }
             }
             else if (vectorEstado[9] < vectorEstado[10] || vectorEstado[10] === "") {
@@ -411,42 +420,90 @@ const generacionColas = (
     return filas;
 };
 
-const validarTecnicoTomaTrabajo = (vectorEstado, cola, reloj, fin_reparacion) => {
+const validarTecnicoTomaTrabajo = (vectorEstado, cola, reloj, fin_reparacion, trabajo) => {
     // Validamos cual es el tecnico que tomará el trabajo o lo agregamos a la cola.
     if (vectorEstado[15] === "Libre" && vectorEstado[18] === "Libre") {
-        let rnd_tec = truncateDecimals(Math.random(), 2);
-        if (rnd_tec < 0.5) {
+        if (trabajo === "Formateo de disco"){
+            let rnd_tec = truncateDecimals(Math.random(), 2);
+            if (rnd_tec < 0.5) {
+                vectorEstado[9] = reloj + fin_reparacion;
+                vectorEstado[15] = "Primeros 15min siendo reparada";
+                vectorEstado[16] = reloj;
+            }
+
+            else{
+                vectorEstado[10] = reloj + fin_reparacion;
+                vectorEstado[18] = "Primeros 15min siendo reparada";
+                vectorEstado[19] = reloj;
+            }
+        }
+        
+        else{
+            let rnd_tec = truncateDecimals(Math.random(), 2);
+            if (rnd_tec < 0.5) {
+                vectorEstado[9] = reloj + fin_reparacion;
+                vectorEstado[15] = "Ocupado";
+                vectorEstado[16] = reloj;
+            }
+
+            else{
+                vectorEstado[10] = reloj + fin_reparacion;
+                vectorEstado[18] = "Ocupado";
+                vectorEstado[19] = reloj;
+            }
+        }        
+    }
+
+    else if (vectorEstado[15] === "Libre"  && vectorEstado[18] === "Ocupado") {
+        if (trabajo === "Formateo de disco"){  
+            vectorEstado[9] = reloj + fin_reparacion;
+            vectorEstado[15] = "Primeros 15min siendo reparada";
+            vectorEstado[16] = reloj; 
+        }
+
+        else{
             vectorEstado[9] = reloj + fin_reparacion;
             vectorEstado[15] = "Ocupado";
             vectorEstado[16] = reloj;
         }
-
-        else{
-            vectorEstado[10] = reloj + fin_reparacion;
-            vectorEstado[18] = "Ocupado";
-            vectorEstado[19] = reloj;
-        }
-        
-    }
-
-    else if (vectorEstado[15] === "Libre"  && vectorEstado[18] === "Ocupado") {
-        vectorEstado[9] = reloj + fin_reparacion;
-        vectorEstado[15] = "Ocupado";
-        vectorEstado[16] = reloj;
     }
 
     else if (vectorEstado[15] === "Ocupado" && vectorEstado[18] === "Libre") {
-        vectorEstado[10] = reloj + fin_reparacion;
-        vectorEstado[18] = "Ocupado";
-        vectorEstado[19] = reloj;
+        if (trabajo === "Formateo de disco"){
+            vectorEstado[10] = reloj + fin_reparacion;
+            vectorEstado[18] = "Primeros 15min siendo reparada";
+            vectorEstado[19] = reloj;  
+        }
+        
+        else{
+            vectorEstado[10] = reloj + fin_reparacion;
+            vectorEstado[18] = "Ocupado";
+            vectorEstado[19] = reloj; 
+        }
     }
     else cola++;
 
     return [vectorEstado, cola];
 }
 
-const determinarProxFinReparacionTecnico = () => {
+const determinarLiberacionYOcupacionTecnicoParaFormateo = (trabajo, prim_min_trab_c, ult_min_trab_c,proximo_fin_reparacion_t1, proximo_fin_reparacion_t2, reloj) => {
+    let liberacion_formateo = 0;
+    let ocupacion_formateo = 0;
+    console.log(proximo_fin_reparacion_t1,proximo_fin_reparacion_t2);
+    if (trabajo === "Formateo de disco" && proximo_fin_reparacion_t1 != ""){
+        liberacion_formateo = prim_min_trab_c + reloj;
+        ocupacion_formateo = proximo_fin_reparacion_t1 - ult_min_trab_c;
+    }
+    else if(trabajo === "Formateo de disco" && proximo_fin_reparacion_t2 != ""){
+        liberacion_formateo = prim_min_trab_c + reloj;
+        ocupacion_formateo = proximo_fin_reparacion_t2 - ult_min_trab_c;
+    }
+    else{
+        liberacion_formateo = "";
+        ocupacion_formateo = "";
+    }
 
+    return [liberacion_formateo, ocupacion_formateo];
 }
 
 /**
