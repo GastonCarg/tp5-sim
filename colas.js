@@ -159,6 +159,7 @@ const calcularProbabilidadAcumulada = (probs) => {
         acu = +acu.toFixed(12);
         probs_acum[i] = acu;
     }
+
     return probs_acum;
 };
 
@@ -179,13 +180,31 @@ const generarTrabajos = (probAcum, tiempos_trabajos) => {
             nombre: NOMBRES_TRABAJOS[i],
             letra: LETRAS_TRABAJOS[i],
         };
-
         trabajos.push(trabajo);
     }
+
     return trabajos;
 };
 
-// Obtenemos el trabajo que se va a realizar
+const generarProximaLlegada = (reloj) => {
+    let rnd = truncateDecimals(Math.random(), 2);
+    let tiempo_entre_llegadas = generadorUniforme(30, 90, rnd);
+    let proxima_llegada = truncateDecimals(tiempo_entre_llegadas + reloj, 2);
+
+    return [rnd, tiempo_entre_llegadas, proxima_llegada];
+};
+
+const generadorUniforme = (a, b, rnd) => {
+    let tiempo_proximo_evento = a + rnd * (b - a);
+    return truncateDecimals(tiempo_proximo_evento, 2);
+};
+
+const generarProximoTrabajo = (trabajos) => {
+    let rnd_trabajos = truncateDecimals(Math.random(), 2);
+    let trabajo = obtenerTrabajo(rnd_trabajos, trabajos);
+    return [rnd_trabajos, trabajo];
+};
+
 const obtenerTrabajo = (rnd, trabajos) => {
     for (let i = 0; i < trabajos.length; i++) {
         if (rnd <= trabajos[i].prob) {
@@ -194,43 +213,17 @@ const obtenerTrabajo = (rnd, trabajos) => {
     }
 };
 
-const generadorUniforme = (a, b, rnd) => {
-    let tiempo_proximo_evento = a + rnd * (b - a);
-    return truncateDecimals(tiempo_proximo_evento, 2);
-};
-
-//TODO: Esto no va a hacer falta
-const determinarTiempoFinReparacionPC = (rnd, trabajo) => {
-    return trabajo.tiempo;
-
-};
-
-// TODO:
-const determinarTiempoLlegada = (rnd, trabajos) => {
-    for (let i = 0; i < trabajos.length; i++) {
-        if (rnd <= trabajos[i].prob) {
-            return trabajos[i].tiempo;
-        }
-    }
-};
-
-const generarProximaLlegada = (reloj) => {
-    let rnd = truncateDecimals(Math.random(), 2);
-    let tiempo_entre_llegadas = generadorUniforme(30, 90, rnd);
-    let proxima_llegada = tiempo_entre_llegadas + reloj;
-
-    return [rnd, tiempo_entre_llegadas, proxima_llegada];
-}
-
-const generarProximoTrabajo = (trabajos, distrib_trab_a, distrib_trab_b) => {
-    let rnd_trabajos = truncateDecimals(Math.random(), 2);
+const generarProximoFinReparacion = (
+    distrib_trab_a,
+    distrib_trab_b,
+    trabajo
+) => {
     let rnd_fin_reparacion = truncateDecimals(Math.random(), 2);
-
-    let trabajo = obtenerTrabajo(rnd_trabajos, trabajos);
-    let fin_reparacion = generadorUniforme(distrib_trab_a, distrib_trab_b, rnd_fin_reparacion) + trabajo.tiempo;
-
-    return [rnd_trabajos, rnd_fin_reparacion, trabajo, fin_reparacion];
-}
+    let fin_reparacion =
+        generadorUniforme(distrib_trab_a, distrib_trab_b, rnd_fin_reparacion) +
+        trabajo.tiempo;
+    return [rnd_fin_reparacion, fin_reparacion];
+};
 
 /**
  *
@@ -319,23 +312,28 @@ const generacionColas = (
     // TODO: Ver que puede cortar antes, si llega al valor de X!!!!!!!!!!!!!!!!!!!!!!
     // for (let i = 0; i < n; i++) {
     for (let i = 0; i < 4; i++) {
-
         if (i === 0) {
-            [rnd_llegada, tiempo_entre_llegadas, proxima_llegada] = generarProximaLlegada(0);
+            [rnd_llegada, tiempo_entre_llegadas, proxima_llegada] =
+                generarProximaLlegada(0);
 
             vectorEstado[0] = "Inicio";
             vectorEstado[1] = 0;
             vectorEstado[2] = rnd_llegada;
             vectorEstado[3] = tiempo_entre_llegadas;
             vectorEstado[4] = proxima_llegada;
-        }
-        else {
+        } else {
             // validamos cuál es el evento que llega primero.
             // TODO: Debemos preguntar si dos eventos llegan al mismo tiempo, cuál se debe tomar primero
 
             // llegada de una computadora
-            let prox_llegada_menor = (vectorEstado[4] < vectorEstado[9] || vectorEstado[9] === "") && (vectorEstado[4] < vectorEstado[10] || vectorEstado[10] === "");
-            let prox_fin_rep_menor = vectorEstado[9] < vectorEstado[10] || vectorEstado[10] === ""
+            // vectorEstado[4] = proxima_llegada
+            // vectorEstado[9] = fin_reparacion_t1
+            // vectorEstado[10] = fin_reparacion_t2
+            let prox_llegada_menor =
+                (vectorEstado[4] < vectorEstado[9] || vectorEstado[9] === "") &&
+                (vectorEstado[4] < vectorEstado[10] || vectorEstado[10] === "");
+            let prox_fin_rep_menor =
+                vectorEstado[9] < vectorEstado[10] || vectorEstado[10] === "";
             if (prox_llegada_menor) {
                 reloj = vectorEstado[4];
 
@@ -353,14 +351,28 @@ const generacionColas = (
                 // }
 
                 // Generamos la proxima llegada de computadora
-                [rnd_llegada, tiempo_entre_llegadas, proxima_llegada] = generarProximaLlegada(reloj);
+                [rnd_llegada, tiempo_entre_llegadas, proxima_llegada] =
+                    generarProximaLlegada(reloj);
 
-                // Generamos el proximo fin de trabajo
-                [rnd_trabajo, rnd_fin_reparacion, trabajo, fin_reparacion] = generarProximoTrabajo(trabajos, distrib_trab_a, distrib_trab_b);
+                // Generamos el proximo trabajo
+                [rnd_trabajo, trabajo] = generarProximoTrabajo(trabajos);
 
-                //Preguntamos que servidor esta libre
+                // Generamos el proximo fin de reparacion
+                [rnd_fin_reparacion, fin_reparacion] =
+                    generarProximoFinReparacion(
+                        distrib_trab_a,
+                        distrib_trab_b,
+                        trabajo
+                    );
+
+                // Preguntamos cual servidor esta libre
                 let aux = [];
-                [aux, colaTrabajos] = validarTecnicoTomaTrabajo([...vectorEstado], colaTrabajos, reloj, fin_reparacion);
+                [aux, colaTrabajos] = validarTecnicoTomaTrabajo(
+                    [...vectorEstado],
+                    colaTrabajos,
+                    reloj,
+                    fin_reparacion
+                );
 
                 proximo_fin_reparacion_t1 = aux[9];
                 proximo_fin_reparacion_t2 = aux[10];
@@ -373,11 +385,12 @@ const generacionColas = (
                         estado: "Tomado tecnico inicio",
                         hora_llegada: reloj,
                         liberacion_tecnico: reloj + prim_min_trab_c,
-                        ocupacion_tecnico: proximo_fin_reparacion_t1 - ult_min_trab_c,
-                    }
+                        ocupacion_tecnico:
+                            proximo_fin_reparacion_t1 - ult_min_trab_c,
+                    };
                     colaFormateos.push(trabFormateo);
                     // pusheamos al colaFormateos el trabajo
-                    console.log('cola formateos', colaFormateos);
+                    console.log("cola formateos", colaFormateos);
                 }
 
                 vectorEstado[0] = "Llegada computadora";
@@ -417,7 +430,7 @@ const generacionColas = (
             }
             // fin de reparacion de una computadora por el tecnico 2
             else {
-                console.log('Entró al 2do tecnico!!')
+                console.log("Entró al 2do tecnico!!");
                 // TODO: Debemos recorrer las computadoras y validar cuál es el evento que llega primero.
                 reloj = vectorEstado[1];
 
@@ -426,10 +439,14 @@ const generacionColas = (
                     // obtenemos el próximo trabajo de formateo
                     let trabajoFormateo = colaFormateos.shift();
                     vectorEstado[1] = reloj + ult_min_trab_c;
-                }
-                else if (colaTrabajos > 0) {
+                } else if (colaTrabajos > 0) {
                     // Debemos generar un rnd para ver que trabajo debe realizar el tecnico
-                    [rnd_trabajo, rnd_fin_reparacion, trabajo, fin_reparacion] = generarProximoTrabajo(trabajos, distrib_trab_a, distrib_trab_b);
+                    [rnd_trabajo, rnd_fin_reparacion, trabajo, fin_reparacion] =
+                        generarProximoTrabajo(
+                            trabajos,
+                            distrib_trab_a,
+                            distrib_trab_b
+                        );
 
                     vectorEstado[5] = rnd_trabajo;
                     vectorEstado[6] = trabajo.nombre;
@@ -437,8 +454,7 @@ const generacionColas = (
                     vectorEstado[8] = fin_reparacion;
                     vectorEstado[10] = reloj + fin_reparacion;
                     vectorEstado[14] = vectorEstado[14];
-                }
-                else {
+                } else {
                     acum_tiempo_ocupacion += vectorEstado[1] - vectorEstado[14];
 
                     vectorEstado[13] = "Libre";
@@ -472,53 +488,55 @@ const generacionColas = (
     return filas;
 };
 
-const validarTecnicoTomaTrabajo = (vectorEstado, cola, reloj, fin_reparacion) => {
+const validarTecnicoTomaTrabajo = (
+    vectorEstado,
+    cola,
+    reloj,
+    fin_reparacion
+) => {
+    let fin_reparacion_t1 = vectorEstado[9];
+    let fin_reparacion_t2 = vectorEstado[10];
+    let estado_t1 = vectorEstado[11];
+    let hora_ocupacion_t1 = vectorEstado[12];
+    let estado_t2 = vectorEstado[13];
+    let hora_ocupacion_t2 = vectorEstado[14];
+    let acum_equipos = vectorEstado[17];
+
     // Validamos cual es el tecnico que tomará el trabajo o lo agregamos a la cola.
-    if (vectorEstado[11] === "Libre" && vectorEstado[13] === "Libre") {
+    if (estado_t1 === "Libre" && estado_t2 === "Libre") {
         let rnd_tec = truncateDecimals(Math.random(), 2);
         // TODO: SACAR ESTO!!!!
         rnd_tec = 0.8;
         if (rnd_tec < 0.5) {
-            vectorEstado[9] = truncateDecimals(reloj + fin_reparacion,2);
-            vectorEstado[11] = "Ocupado";
-            vectorEstado[12] = reloj;
-        }
-
-        else{
-            vectorEstado[10] = reloj + fin_reparacion;
-            vectorEstado[13] = "Ocupado";
+            fin_reparacion_t1 = truncateDecimals(reloj + fin_reparacion, 2);
+            estado_t1 = "Ocupado";
+            hora_ocupacion_t1 = reloj;
+        } else {
+            fin_reparacion_t2 = reloj + fin_reparacion;
+            estado_t2 = "Ocupado";
             vectorEstado[14] = reloj;
         }
-
-    }
-
-    else if (vectorEstado[11] === "Libre"  && vectorEstado[13] === "Ocupado") {
-        vectorEstado[9] = truncateDecimals(reloj + fin_reparacion,2);
-        vectorEstado[11] = "Ocupado";
-        vectorEstado[12] = reloj;
-    }
-
-    else if (vectorEstado[11] === "Ocupado" && vectorEstado[13] === "Libre") {
-        vectorEstado[10] = truncateDecimals(reloj + fin_reparacion,2);
-        vectorEstado[13] = "Ocupado";
-        vectorEstado[14] = reloj;
-    }
-    else {
+    } else if (estado_t1 === "Libre" && estado_t2 === "Ocupado") {
+        fin_reparacion_t1 = truncateDecimals(reloj + fin_reparacion, 2);
+        estado_t1 = "Ocupado";
+        hora_ocupacion_t1 = reloj;
+    } else if (estado_t1 === "Ocupado" && estado_t2 === "Libre") {
+        fin_reparacion_t2 = truncateDecimals(reloj + fin_reparacion, 2);
+        estado_t2 = "Ocupado";
+        hora_ocupacion_t2 = reloj;
+    } else {
         if (cola === 3) {
-            vectorEstado[17] += 1;
-        }
-        else {
+            acum_equipos += 1;
+        } else {
             cola++;
             vectorEstado[15] = cola;
         }
-    };
+    }
 
     return [vectorEstado, cola];
-}
+};
 
-const determinarProxFinReparacionTecnico = () => {
-
-}
+const determinarProxFinReparacionTecnico = () => {};
 
 /**
  * Funcion principal que se encarga de llamar a las demas funciones y mostrar los resultados en la tabla
@@ -554,7 +572,7 @@ const simular = () => {
             ult_min_trab_c,
             trabajos
         );
-        console.log(filas)
+        console.log(filas);
         // transformar el arreglo de 'vectoresEstado' a objetos 'fila' para ser visualizados en la tabla
         filas.map((fila) => tableData.push(crearFila(fila)));
     } catch (error) {
@@ -569,39 +587,39 @@ const simular = () => {
                 {
                     field: "evento",
                     headerName: "Evento",
-                    maxWidth: 140,
+                    maxWidth: 200,
                     suppressMenu: true,
                 },
                 {
                     field: "reloj",
                     headerName: "Reloj",
-                    maxWidth: 140,
+                    maxWidth: 100,
                     suppressMenu: true,
                 },
-            ]
+            ],
         },
         {
-            headerName: "Llegada Computadora",
+            headerName: "Llegada computadora",
             children: [
                 {
                     field: "rnd_llegada",
                     headerName: "RND llegada",
-                    maxWidth: 140,
+                    maxWidth: 100,
                     suppressMenu: true,
                 },
                 {
                     field: "llegada",
                     headerName: "Tiempo llegada",
-                    maxWidth: 140,
+                    maxWidth: 100,
                     suppressMenu: true,
                 },
                 {
                     field: "proxima_llegada",
-                    headerName: "Proxima llegada",
-                    maxWidth: 140,
+                    headerName: "Próxima llegada",
+                    maxWidth: 100,
                     suppressMenu: true,
                 },
-            ]
+            ],
         },
         {
             headerName: "Trabajo",
@@ -609,74 +627,74 @@ const simular = () => {
                 {
                     field: "rnd_trabajo",
                     headerName: "RND trabajo",
-                    maxWidth: 140,
+                    maxWidth: 100,
                     suppressMenu: true,
                 },
                 {
                     field: "trabajo",
                     headerName: "Trabajo",
-                    maxWidth: 140,
+                    maxWidth: 150,
                     suppressMenu: true,
                 },
-            ]
+            ],
         },
         {
-            headerName: "Fin reparación",
+            headerName: "Fin reparación computadora",
             children: [
                 {
                     field: "rnd_fin_reparacion",
-                    headerName: "RND fin reparacion",
-                    maxWidth: 140,
+                    headerName: "RND fin reparación",
+                    maxWidth: 110,
                     suppressMenu: true,
                 },
                 {
                     field: "fin_reparacion",
-                    headerName: "Tiempo fin reparacion",
-                    maxWidth: 140,
+                    headerName: "Tiempo fin reparación",
+                    maxWidth: 110,
                     suppressMenu: true,
                 },
                 {
                     field: "proximo_fin_reparacion_t1",
-                    headerName: "Proximo fin reparacion (T1)",
-                    maxWidth: 140,
+                    headerName: "Próximo fin reparación (T1)",
+                    maxWidth: 110,
                     suppressMenu: true,
                 },
                 {
                     field: "proximo_fin_reparacion_t2",
-                    headerName: "Proximo fin reparacion (T2)",
-                    maxWidth: 140,
+                    headerName: "Próximo fin reparación (T2)",
+                    maxWidth: 110,
                     suppressMenu: true,
                 },
-            ]
+            ],
         },
         {
-            headerName: "Tecnicos",
+            headerName: "Técnicos",
             children: [
                 {
                     field: "estado_t1",
                     headerName: "Estado (T1)",
-                    maxWidth: 140,
+                    maxWidth: 100,
                     suppressMenu: true,
                 },
                 {
                     field: "hora_ocupacion_t1",
-                    headerName: "Hora ocupacion (T1)",
-                    maxWidth: 140,
+                    headerName: "Hora ocupación (T1)",
+                    maxWidth: 100,
                     suppressMenu: true,
                 },
                 {
                     field: "estado_t2",
                     headerName: "Estado (T2)",
-                    maxWidth: 140,
+                    maxWidth: 100,
                     suppressMenu: true,
                 },
                 {
                     field: "hora_ocupacion_t2",
-                    headerName: "Hora ocupacion (T2)",
-                    maxWidth: 140,
+                    headerName: "Hora ocupación (T2)",
+                    maxWidth: 100,
                     suppressMenu: true,
                 },
-            ]
+            ],
         },
         {
             headerName: "",
@@ -684,28 +702,28 @@ const simular = () => {
                 {
                     field: "cola",
                     headerName: "Cola",
-                    maxWidth: 140,
+                    maxWidth: 70,
                     suppressMenu: true,
                 },
                 {
                     field: "acum_tiempo_permanencia",
                     headerName: "Tiempo acumulado permanencia de equipo",
-                    maxWidth: 140,
+                    maxWidth: 120,
                     suppressMenu: true,
                 },
                 {
                     field: "acum_equipos",
-                    headerName: "Cantidad equipos sin revision",
-                    maxWidth: 140,
+                    headerName: "Cantidad equipos sin revisión",
+                    maxWidth: 110,
                     suppressMenu: true,
                 },
                 {
                     field: "acum_tiempo_ocupacion",
-                    headerName: "Tiempo acumulado ocupacion de tecnicos",
-                    maxWidth: 140,
+                    headerName: "Tiempo acumulado ocupación de técnicos",
+                    maxWidth: 110,
                     suppressMenu: true,
                 },
-            ]
+            ],
         },
     ];
 
@@ -716,6 +734,7 @@ const simular = () => {
             filter: true,
         },
         columnDefs,
+        groupHeaderHeight: 50,
         headerHeight: 100,
         rowData: tableData,
     };
@@ -799,7 +818,7 @@ const crearFila = (vectorEstado) => {
                 hora_ocupacion: vectorEstado[i + 1],
                 liberacion_tecnico: vectorEstado[i + 2],
                 ocupacion_tecnico: vectorEstado[i + 3],
-            }
+            };
         }
     }
 

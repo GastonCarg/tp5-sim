@@ -3,13 +3,9 @@
     text-align: center;
 }
 
+.ag-header-cell-label,
+.ag-header-group-cell-label,
 .ag-row .ag-cell {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.ag-header-cell-label {
     display: flex;
     justify-content: center;
 }
