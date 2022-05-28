@@ -214,6 +214,24 @@ const determinarTiempoLlegada = (rnd, trabajos) => {
     }
 };
 
+const generarProximaLlegada = (reloj) => {
+    let rnd = truncateDecimals(Math.random(), 2);
+    let tiempo_entre_llegadas = generadorUniforme(30, 90, rnd);
+    let proxima_llegada = tiempo_entre_llegadas + reloj;
+
+    return [rnd, tiempo_entre_llegadas, proxima_llegada];
+}
+
+const generarProximoTrabajo = (trabajos, distrib_trab_a, distrib_trab_b) => {
+    let rnd_trabajos = truncateDecimals(Math.random(), 2);
+    let rnd_fin_reparacion = truncateDecimals(Math.random(), 2);
+
+    let trabajo = obtenerTrabajo(rnd_trabajos, trabajos);
+    let fin_reparacion = generadorUniforme(distrib_trab_a, distrib_trab_b, rnd_fin_reparacion) + trabajo.tiempo;
+
+    return [rnd_trabajos, rnd_fin_reparacion, trabajo, fin_reparacion];
+}
+
 /**
  *
  * @param {number} n
@@ -251,6 +269,7 @@ const generacionColas = (
     let reloj = 0;
     let colaTrabajos = 0;
     let colaFormateos = [];
+    let acum_tiempo_ocupacion = 0;
 
     let filas = [];
 
@@ -302,9 +321,7 @@ const generacionColas = (
     for (let i = 0; i < 4; i++) {
 
         if (i === 0) {
-            rnd_llegada = truncateDecimals(Math.random(), 2);
-            tiempo_entre_llegadas = generadorUniforme(30, 90, rnd_llegada);
-            proxima_llegada = tiempo_entre_llegadas;
+            [rnd_llegada, tiempo_entre_llegadas, proxima_llegada] = generarProximaLlegada(0);
 
             vectorEstado[0] = "Inicio";
             vectorEstado[1] = 0;
@@ -321,28 +338,25 @@ const generacionColas = (
             let prox_fin_rep_menor = vectorEstado[9] < vectorEstado[10] || vectorEstado[10] === ""
             if (prox_llegada_menor) {
                 reloj = vectorEstado[4];
-                if (vectorEstado.length > 19) {
-                    for (let j = 19; j < vectorEstado.length; j+=4) {
-                        // Para el caso de la liberacion del tecnico para el trabajo de formateo
-                        if (vectorEstado[j+2] !== "" && vectorEstado[4] < vectorEstado[j+2] && vectorEstado[4] < vectorEstado[j+3]) {
-                            continue;
-                        }
-                        else {
-                            // TODO: Acá deberíamos hacer las validaciones con respecto a los tiempos de reparación de los equipos??
-                        }
-                    }
-                }
-                rnd_llegada = truncateDecimals(Math.random(), 2);
-                tiempo_entre_llegadas = generadorUniforme(30, 90, rnd_llegada);
-                proxima_llegada = truncateDecimals(tiempo_entre_llegadas + reloj, 2);
 
-                //Debemos tirar un rnd para ver a que trabajo pertenece la llegada de la PC
-                rnd_trabajo = truncateDecimals(Math.random(), 2);
-                trabajo = obtenerTrabajo(rnd_trabajo, trabajos);
+                // TODO: Esto lo dejo comentado hasta que hagamos funcionar bien el tema de los trabajos
+                // if (vectorEstado.length > 19) {
+                //     for (let j = 19; j < vectorEstado.length; j+=4) {
+                //         // Para el caso de la liberacion del tecnico para el trabajo de formateo
+                //         if (vectorEstado[j+2] !== "" && vectorEstado[4] < vectorEstado[j+2] && vectorEstado[4] < vectorEstado[j+3]) {
+                //             continue;
+                //         }
+                //         else {
+                //             // TODO: Acá deberíamos hacer las validaciones con respecto a los tiempos de reparación de los equipos??
+                //         }
+                //     }
+                // }
 
-                //Trabajamos con el fin de reparacion del trabajo
-                rnd_fin_reparacion = truncateDecimals(Math.random(), 2);
-                fin_reparacion = generadorUniforme(distrib_trab_a, distrib_trab_b, rnd_fin_reparacion) + Number(trabajo.tiempo);
+                // Generamos la proxima llegada de computadora
+                [rnd_llegada, tiempo_entre_llegadas, proxima_llegada] = generarProximaLlegada(reloj);
+
+                // Generamos el proximo fin de trabajo
+                [rnd_trabajo, rnd_fin_reparacion, trabajo, fin_reparacion] = generarProximoTrabajo(trabajos, distrib_trab_a, distrib_trab_b);
 
                 //Preguntamos que servidor esta libre
                 let aux = [];
@@ -363,9 +377,8 @@ const generacionColas = (
                     }
                     colaFormateos.push(trabFormateo);
                     // pusheamos al colaFormateos el trabajo
-                    console.log(colaFormateos);
+                    console.log('cola formateos', colaFormateos);
                 }
-
 
                 vectorEstado[0] = "Llegada computadora";
                 vectorEstado[1] = reloj;
@@ -388,21 +401,61 @@ const generacionColas = (
             // fin de reparacion de una computadora por el tecnico 1
             else if (prox_fin_rep_menor) {
                 // TODO: Debemos recorrer las computadoras y validar cuál es el evento que llega primero.
+                acum_tiempo_ocupacion += vectorEstado[1] - vectorEstado[12];
+
                 vectorEstado[0] = "Fin reparación computadora";
                 vectorEstado[1] = vectorEstado[9];
                 vectorEstado[2] = "";
                 vectorEstado[3] = "";
-
+                vectorEstado[5] = "";
+                vectorEstado[6] = "";
+                vectorEstado[7] = "";
+                vectorEstado[8] = "";
+                vectorEstado[9] = "";
+                vectorEstado[12] = "";
+                vectorEstado[18] = acum_tiempo_ocupacion;
             }
             // fin de reparacion de una computadora por el tecnico 2
             else {
+                console.log('Entró al 2do tecnico!!')
                 // TODO: Debemos recorrer las computadoras y validar cuál es el evento que llega primero.
+                reloj = vectorEstado[1];
+
+                // if (colaFormateos.length > 0) {
+                if (colaFormateos.length > 1000) {
+                    // obtenemos el próximo trabajo de formateo
+                    let trabajoFormateo = colaFormateos.shift();
+                    vectorEstado[1] = reloj + ult_min_trab_c;
+                }
+                else if (colaTrabajos > 0) {
+                    // Debemos generar un rnd para ver que trabajo debe realizar el tecnico
+                    [rnd_trabajo, rnd_fin_reparacion, trabajo, fin_reparacion] = generarProximoTrabajo(trabajos, distrib_trab_a, distrib_trab_b);
+
+                    vectorEstado[5] = rnd_trabajo;
+                    vectorEstado[6] = trabajo.nombre;
+                    vectorEstado[7] = rnd_fin_reparacion;
+                    vectorEstado[8] = fin_reparacion;
+                    vectorEstado[10] = reloj + fin_reparacion;
+                    vectorEstado[14] = vectorEstado[14];
+                }
+                else {
+                    acum_tiempo_ocupacion += vectorEstado[1] - vectorEstado[14];
+
+                    vectorEstado[13] = "Libre";
+                    vectorEstado[5] = "";
+                    vectorEstado[6] = "";
+                    vectorEstado[7] = "";
+                    vectorEstado[8] = "";
+                    vectorEstado[9] = "";
+                    vectorEstado[10] = "";
+                    vectorEstado[14] = "";
+                    vectorEstado[18] = acum_tiempo_ocupacion;
+                }
+
                 vectorEstado[0] = "Fin reparación computadora";
                 vectorEstado[1] = vectorEstado[10];
                 vectorEstado[2] = "";
                 vectorEstado[3] = "";
-                vectorEstado[5] = "";
-                vectorEstado[6] = "";
             }
         }
 
@@ -423,6 +476,8 @@ const validarTecnicoTomaTrabajo = (vectorEstado, cola, reloj, fin_reparacion) =>
     // Validamos cual es el tecnico que tomará el trabajo o lo agregamos a la cola.
     if (vectorEstado[11] === "Libre" && vectorEstado[13] === "Libre") {
         let rnd_tec = truncateDecimals(Math.random(), 2);
+        // TODO: SACAR ESTO!!!!
+        rnd_tec = 0.8;
         if (rnd_tec < 0.5) {
             vectorEstado[9] = truncateDecimals(reloj + fin_reparacion,2);
             vectorEstado[11] = "Ocupado";
