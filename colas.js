@@ -5,15 +5,15 @@ const eGridDiv = document.getElementById("gridVariable");
 const btnExportToExcelRandVar = document.getElementById(
     "btnExportToExcelRandVar"
 );
-let gridRandVarOptions = {};
+let gridOptions = {};
 
 // variable globales
 const NOMBRES_TRABAJOS = [
-    "Cambio de placa",
-    "Ampliacion de memoria",
-    "Formateo de disco",
-    "Agregar CD o DVD",
-    "Cambio de memoria",
+    "Cambio placa",
+    "Ampliación memoria",
+    "Formateo disco",
+    "Agregar CD/DVD",
+    "Cambio memoria",
 ];
 const LETRAS_TRABAJOS = ["A", "B", "C", "D", "E"];
 
@@ -213,16 +213,72 @@ const obtenerTrabajo = (rnd, trabajos) => {
     }
 };
 
-const generarProximoFinReparacion = (
+const generarProximoFinTarea = (
     distrib_trab_a,
     distrib_trab_b,
-    trabajo
+    trabajo,
+    reloj,
+    prim_min_trab_c
 ) => {
-    let rnd_fin_reparacion = truncateDecimals(Math.random(), 2);
-    let fin_reparacion =
-        generadorUniforme(distrib_trab_a, distrib_trab_b, rnd_fin_reparacion) +
-        trabajo.tiempo;
-    return [rnd_fin_reparacion, fin_reparacion];
+    let rnd_fin_tarea = truncateDecimals(Math.random(), 2);
+    let fin_tarea;
+
+    if (trabajo.letra === "C") {
+        rnd_fin_tarea = "-";
+        fin_tarea = reloj + prim_min_trab_c;
+    } else {
+        fin_tarea =
+            generadorUniforme(distrib_trab_a, distrib_trab_b, rnd_fin_tarea) +
+            trabajo.tiempo;
+    }
+
+    return [rnd_fin_tarea, fin_tarea];
+};
+
+const ocuparTecnico = (reloj, fin_tarea, trabajo, ult_min_trab_c) => {
+    let fin_tarea_t;
+    if (trabajo.letra === "C") {
+        fin_tarea_t = reloj + ult_min_trab_c;
+    } else {
+        fin_tarea_t = truncateDecimals(reloj + fin_tarea, 2);
+    }
+    let estado_t = "Ocupado";
+    let minuto_ocupacion_t = reloj;
+
+    return [fin_tarea_t, estado_t, minuto_ocupacion_t];
+};
+
+const generarPC = (
+    tecnicoDisponible,
+    trabajo,
+    reloj,
+    fin_tarea,
+    ult_min_trab_c
+) => {
+    let pc;
+    if (tecnicoDisponible) {
+        if (trabajo.letra === "C") {
+            pc = {
+                estado_pc: "Iniciando formateo",
+                minuto_llegada: reloj,
+                minuto_fin_formateo: fin_tarea - ult_min_trab_c,
+            };
+        } else {
+            pc = {
+                estado_pc: "Siendo reparada",
+                minuto_llegada: reloj,
+                minuto_fin_formateo: "",
+            };
+        }
+    } else {
+        pc = {
+            estado_pc: "Esperando reparación",
+            minuto_llegada: reloj,
+            minuto_fin_formateo: "",
+        };
+    }
+
+    return pc;
 };
 
 /**
@@ -231,11 +287,11 @@ const generarProximoFinReparacion = (
  * @param {number} x
  * @param {number} desde
  * @param {number} hasta
- * @param {*} distrib_trab_a
- * @param {*} distrib_trab_b
- * @param {*} prim_min_trab_c
- * @param {*} ult_min_trab_c
- * @param {*} trabajos
+ * @param {number} distrib_trab_a
+ * @param {number} distrib_trab_b
+ * @param {number} prim_min_trab_c
+ * @param {number} ult_min_trab_c
+ * @param {Array} trabajos
  * @returns
  */
 const generacionColas = (
@@ -251,255 +307,322 @@ const generacionColas = (
 ) => {
     let evento = "";
     let reloj = 0;
-    let rnd_llegada = 0;
-    let llegada = 0;
-    let proxima_llegada = 0;
-    let rnd_trabajo = 0;
-    let trabajo = "";
-    let rnd_fin_reparacion = 0;
-    let fin_reparacion = 0;
-    let proximo_fin_reparacion_t1 = 0;
-    let proximo_fin_reparacion_t2 = 0;
+    let rnd_llegada = "-";
+    let llegada = "-";
+    let proxima_llegada = "-";
+    let rnd_trabajo = "-";
+    let trabajo = {
+        prob: "-",
+        tiempo: "-",
+        nombre: "-",
+        letra: "-",
+    };
+    let rnd_fin_tarea = "-";
+    let fin_tarea = "-";
+    let fin_tarea_t1 = "-";
+    let fin_tarea_t2 = "-";
+    let estado_t1 = "Libre";
+    let minuto_ocupacion_t1 = "-";
+    let estado_t2 = "Libre";
+    let minuto_ocupacion_t2 = "-";
     let cola = 0;
-    let colaFormateos = [];
+    let cola_formateos = 0;
+    let acum_tiempo_permanencia = 0;
+    let acum_pcs = 0;
     let acum_tiempo_ocupacion = 0;
-
+    let pc = {
+        estado_pc: "-",
+        minuto_llegada: "-",
+        minuto_fin_formateo: "-",
+    };
+    let pcs = [];
     let filas = [];
 
-    /*
-    vectorEstado[0] = evento
-    vectorEstado[1] = reloj
-    vectorEstado[2] = rnd_llegada
-    vectorEstado[3] = llegada
-    vectorEstado[4] = proxima_llegada
-    vectorEstado[5] = rnd_trabajo
-    vectorEstado[6] = trabajo
-    vectorEstado[7] = rnd_fin_reparacion
-    vectorEstado[8] = tiempo_fin_reparacion
-    vectorEstado[9] = fin_reparacion_t1
-    vectorEstado[10] = fin_reparacion_t2
-    vectorEstado[11] = estado_t1
-    vectorEstado[12] = minuto_ocupacion_t1
-    vectorEstado[13] = estado_t2
-    vectorEstado[14] = minuto_ocupacion_t2
-    vectorEstado[15] = cola
-    vectorEstado[16] = cola_formateos
-    vectorEstado[17] = acum_tiempo_permanencia
-    vectorEstado[18] = acum_pcs
-    vectorEstado[19] = acum_tiempo_ocupacion
-    */
     const vectorEstado = new Array();
 
     // recorrer por la cantidad de filas
     // TODO: Ver que puede cortar antes, si llega al valor de X!!!!!!!!!!!!!!!!!!!!!!
     for (let i = 0; i < n; i++) {
         if (i === 0) {
-            evento = "Llegada";
+            evento = "Inicio";
             reloj = 0;
 
             [rnd_llegada, llegada, proxima_llegada] = generarProximaLlegada(0);
-
-            vectorEstado[0] = evento;
-            vectorEstado[1] = reloj;
-            vectorEstado[2] = rnd_llegada;
-            vectorEstado[3] = llegada;
-            vectorEstado[4] = proxima_llegada;
-            vectorEstado[5] = "";
-            vectorEstado[6] = "";
-            vectorEstado[7] = "";
-            vectorEstado[8] = "";
-            vectorEstado[9] = "";
-            vectorEstado[10] = "";
-            vectorEstado[11] = "Libre";
-            vectorEstado[12] = "";
-            vectorEstado[13] = "Libre";
-            vectorEstado[14] = "";
-            vectorEstado[15] = 0;
-            vectorEstado[16] = 0;
-            vectorEstado[17] = 0;
-            vectorEstado[18] = 0;
-            vectorEstado[19] = 0;
         } else {
             // validamos cuál es el evento que llega primero.
-            // Caso 1 de 4: llegada de una computadora
-            if (siguienteEventoLlegada(vectorEstado)) {
+            // Caso 1 de 4: llegada de PC
+            if (
+                (proxima_llegada < fin_tarea_t1 || fin_tarea_t1 === "-") &&
+                (proxima_llegada < fin_tarea_t2 || fin_tarea_t2 === "-")
+            ) {
                 evento = "Llegada PC";
                 reloj = vectorEstado[4];
 
-                // Generamos la proxima llegada de computadora
+                // Generamos la proxima llegada de PC
                 [rnd_llegada, llegada, proxima_llegada] =
                     generarProximaLlegada(reloj);
 
-                // en caso que ambos tecnicos esten ocupados, no se genera el proximo trabajo
-                if (ambosTecnicosOcupados(vectorEstado)) {
-                    rnd_trabajo = "";
-                    trabajo = "";
-                    rnd_fin_reparacion = "";
-                    fin_reparacion = "";
-                } else {
+                // en caso que ambos tecnicos NO esten ocupados, se genera el proximo trabajo
+                if (!(estado_t1 === "Ocupado" && estado_t2 === "Ocupado")) {
                     // Generamos el proximo trabajo
                     [rnd_trabajo, trabajo] = generarProximoTrabajo(trabajos);
 
-                    // Generamos el proximo fin de reparacion
-                    [rnd_fin_reparacion, fin_reparacion] =
-                        generarProximoFinReparacion(
-                            distrib_trab_a,
-                            distrib_trab_b,
-                            trabajo
-                        );
+                    // Generamos el proximo fin de tarea
+                    [rnd_fin_tarea, fin_tarea, pc] = generarProximoFinTarea(
+                        distrib_trab_a,
+                        distrib_trab_b,
+                        trabajo,
+                        reloj,
+                        prim_min_trab_c
+                    );
 
-                    if (trabajo.letra === "C") {
-                        // TODO: Ver cómo hacer para obtener el tiempo de ocupacion del tecnico!!!
-                        // debemos saber qué tecnico lo toma para saber cuál pasarle
-                        // yo lo dejo hardcodeado con el tecnico 1
-                        let trabFormateo = {
-                            estado: "Tomado tecnico inicio",
-                            hora_llegada: reloj,
-                            liberacion_tecnico: reloj + prim_min_trab_c,
-                            ocupacion_tecnico:
-                                proximo_fin_reparacion_t1 - ult_min_trab_c,
-                        };
-                        colaFormateos.push(trabFormateo);
-                        // pusheamos al colaFormateos el trabajo
-                    }
-
-                    vectorEstado[0] = evento;
-                    vectorEstado[1] = reloj;
-                    vectorEstado[2] = rnd_llegada;
-                    vectorEstado[3] = llegada;
-                    vectorEstado[4] = proxima_llegada;
-                    vectorEstado[5] = rnd_trabajo;
-                    vectorEstado[6] = trabajo.nombre;
-                    vectorEstado[7] = rnd_fin_reparacion;
-                    vectorEstado[8] = fin_reparacion;
+                    // Generamos el objeto PC
+                    pc = generarPC(
+                        true,
+                        trabajo,
+                        reloj,
+                        fin_tarea,
+                        ult_min_trab_c
+                    );
                 }
 
                 // Validamos cual es el tecnico que tomará el trabajo
-                if (ambosTecnicosLibres(vectorEstado)) {
+                if (estado_t1 === "Libre" && estado_t2 === "Libre") {
                     let rnd_tec = truncateDecimals(Math.random(), 2);
                     if (rnd_tec < 0.5) {
-                        ocuparTecnico(1, vectorEstado, reloj, fin_reparacion);
+                        [fin_tarea_t1, estado_t1, minuto_ocupacion_t1] =
+                            ocuparTecnico(
+                                reloj,
+                                fin_tarea,
+                                trabajo,
+                                ult_min_trab_c
+                            );
                     } else {
-                        ocuparTecnico(2, vectorEstado, reloj, fin_reparacion);
+                        [fin_tarea_t2, estado_t2, minuto_ocupacion_t2] =
+                            ocuparTecnico(
+                                reloj,
+                                fin_tarea,
+                                trabajo,
+                                ult_min_trab_c
+                            );
                     }
-                } else if (tecnico1Libre(vectorEstado)) {
-                    ocuparTecnico(1, vectorEstado, reloj, fin_reparacion);
-                } else if (tecnico2Libre(vectorEstado)) {
-                    ocuparTecnico(2, vectorEstado, reloj, fin_reparacion);
+                    cola > 0 && cola--;
+                } else if (estado_t1 === "Libre" && estado_t2 === "Ocupado") {
+                    [fin_tarea_t1, estado_t1, minuto_ocupacion_t1] =
+                        ocuparTecnico(
+                            reloj,
+                            fin_tarea,
+                            trabajo,
+                            ult_min_trab_c
+                        );
+                    cola > 0 && cola--;
+                } else if (estado_t1 === "Ocupado" && estado_t2 === "Libre") {
+                    [fin_tarea_t2, estado_t2, minuto_ocupacion_t2] =
+                        ocuparTecnico(
+                            reloj,
+                            fin_tarea,
+                            trabajo,
+                            ult_min_trab_c
+                        );
+                    cola > 0 && cola--;
                 }
-                // En caso que los dos esten ocupados, lo agregamos a la cola.
+                // En caso que los dos tecnicos esten ocupados, incrementamos la cola.
                 else {
-                    // en el caso que haya 3 equipos en cola, se agrega 1 equipo al acum_equipos
-                    // (equipos que no pueden ser atendidos en este laboratorio)
-                    if (vectorEstado[15] === 3) {
-                        vectorEstado[17]++;
-                    } else {
-                        vectorEstado[15]++;
-                    }
-                }
-
-                vectorEstado[1] = reloj;
-                vectorEstado[2] = rnd_llegada;
-                vectorEstado[3] = llegada;
-                vectorEstado[4] = proxima_llegada;
-            }
-
-            // Caso 2 de 4: fin de reparacion de una computadora por el tecnico 1
-            else if (siguienteEventoFinReparacionT1(vectorEstado)) {
-                vectorEstado[0] = "Fin reparación computadora T1";
-                reloj = vectorEstado[1];
-                vectorEstado[1] = vectorEstado[9];
-                vectorEstado[2] = "";
-                vectorEstado[3] = "";
-
-                // if (colaFormateos.length > 0) {
-                if (colaFormateos.length > 1000) {
-                    // obtenemos el próximo trabajo de formateo
-                    let trabajoFormateo = colaFormateos.shift();
-                    vectorEstado[1] = reloj + ult_min_trab_c;
-                }
-                // en caso que haya alguna computadora en cola
-                else if (vectorEstado[15] > 0) {
-                    // Debemos generar un rnd para ver que trabajo debe realizar el tecnico
-                    [rnd_trabajo, trabajo] = generarProximoTrabajo(
-                        trabajos,
-                        distrib_trab_a,
-                        distrib_trab_b
+                    // Generamos el objeto PC
+                    pc = generarPC(
+                        false,
+                        trabajo,
+                        reloj,
+                        fin_tarea,
+                        ult_min_trab_c
                     );
 
-                    ocuparTecnico(1, vectorEstado, reloj, fin_reparacion);
+                    // No generamos el proximo trabajo, ni el proximo fin de tarea
+                    rnd_trabajo = "-";
+                    trabajo = {
+                        prob: "-",
+                        tiempo: "-",
+                        nombre: "-",
+                        letra: "-",
+                    };
+                    rnd_fin_tarea = "-";
+                    fin_tarea = "-";
 
-                    vectorEstado[5] = rnd_trabajo;
-                    vectorEstado[6] = trabajo.nombre;
-                    vectorEstado[7] = rnd_fin_reparacion;
-                    vectorEstado[8] = fin_reparacion;
+                    // en el caso que haya 3 equipos en cola, se agrega 1 equipo al acum_pcs
+                    // (son las PCs que no pueden ser atendidas en este laboratorio)
+                    if (cola === 3) {
+                        acum_pcs++;
+                    } else {
+                        cola++;
+                    }
                 }
-                // en caso que no haya ninguna computadora en cola
+
+                // En caso que sea un trabajo de formateo, no hace falta el tiempo fin tarea
+                if (trabajo.letra === "C") {
+                    fin_tarea = "-";
+                }
+
+                // Agregamos el objeto PC al arreglo de PCs
+                pcs.push(pc);
+            }
+
+            // Caso 2 de 4: fin tarea T1
+            else if (fin_tarea_t1 < fin_tarea_t2 || fin_tarea_t2 === "-") {
+                evento = "Fin tarea T1";
+                reloj = vectorEstado[9];
+                rnd_llegada = "-";
+                llegada = "-";
+
+                // if (colaFormateos.length > 0) {
+                if (cola_formateos.length > 1000) {
+                    // obtenemos el próximo trabajo de formateo
+                    let trabajoFormateo = cola_formateos.shift();
+                    vectorEstado[1] = reloj + ult_min_trab_c;
+                }
+                // en caso que haya alguna PC en cola
+                else if (cola > 0) {
+                    // Generamos el proximo trabajo
+                    [rnd_trabajo, trabajo] = generarProximoTrabajo(trabajos);
+
+                    // Generamos el proximo fin de tarea
+                    [rnd_fin_tarea, fin_tarea, pc] = generarProximoFinTarea(
+                        distrib_trab_a,
+                        distrib_trab_b,
+                        trabajo,
+                        reloj,
+                        prim_min_trab_c
+                    );
+
+                    // Ocupamos el tecnico 1
+                    [fin_tarea_t1, estado_t1, minuto_ocupacion_t1] =
+                        ocuparTecnico(
+                            reloj,
+                            fin_tarea,
+                            trabajo,
+                            ult_min_trab_c
+                        );
+
+                    // En caso que sea un trabajo de formateo, no hace falta el tiempo fin tarea
+                    if (trabajo.letra === "C") {
+                        fin_tarea = "-";
+                    }
+
+                    // Restamos 1 a la cola
+                    cola--;
+                }
+                // en caso que no haya ninguna PC en cola
                 else {
                     acum_tiempo_ocupacion += truncateDecimals(
-                        vectorEstado[1] - vectorEstado[14],
+                        reloj - minuto_ocupacion_t1,
                         2
                     );
 
-                    vectorEstado[5] = "";
-                    vectorEstado[6] = "";
-                    vectorEstado[7] = "";
-                    vectorEstado[8] = "";
-                    vectorEstado[9] = "";
-                    vectorEstado[11] = "Libre";
-                    vectorEstado[12] = "";
-                    vectorEstado[18] = acum_tiempo_ocupacion;
+                    // No generamos ningun trabajo, ni ningun fin de tarea y el tecnico se libera
+                    rnd_trabajo = "-";
+                    trabajo = {
+                        prob: "-",
+                        tiempo: "-",
+                        nombre: "-",
+                        letra: "-",
+                    };
+                    rnd_fin_tarea = "-";
+                    fin_tarea = "-";
+                    fin_tarea_t1 = "-";
+                    estado_t1 = "Libre";
+                    minuto_ocupacion_t1 = "-";
                 }
             }
 
-            // Caso 3 de 4: fin de reparacion de una computadora por el tecnico 2
-            else if (siguienteEventoFinReparacionT2(vectorEstado)) {
-                vectorEstado[0] = "Fin reparación computadora T2";
-                reloj = vectorEstado[1];
-                vectorEstado[1] = vectorEstado[10];
-                vectorEstado[2] = "";
-                vectorEstado[3] = "";
+            // Caso 3 de 4: fin tarea T2
+            else if (fin_tarea_t2 < fin_tarea_t1 || fin_tarea_t1 === "-") {
+                evento = "Fin tarea T2";
+                reloj = vectorEstado[10];
+                rnd_llegada = "-";
+                llegada = "-";
 
                 // if (colaFormateos.length > 0) {
-                if (colaFormateos.length > 1000) {
+                if (cola_formateos.length > 1000) {
                     // obtenemos el próximo trabajo de formateo
-                    let trabajoFormateo = colaFormateos.shift();
+                    let trabajoFormateo = cola_formateos.shift();
                     vectorEstado[1] = reloj + ult_min_trab_c;
-                } else if (vectorEstado[15] > 0) {
-                    // Debemos generar un rnd para ver que trabajo debe realizar el tecnico
-                    [rnd_trabajo, trabajo] = generarProximoTrabajo(
-                        trabajos,
+                }
+                // en caso que haya alguna PC en cola
+                else if (cola > 0) {
+                    // Generamos el proximo trabajo
+                    [rnd_trabajo, trabajo] = generarProximoTrabajo(trabajos);
+
+                    // Generamos el proximo fin de tarea
+                    [rnd_fin_tarea, fin_tarea, pc] = generarProximoFinTarea(
                         distrib_trab_a,
-                        distrib_trab_b
+                        distrib_trab_b,
+                        trabajo,
+                        reloj,
+                        prim_min_trab_c
                     );
 
-                    ocuparTecnico(2, vectorEstado, reloj, fin_reparacion);
+                    // Ocupamos el tecnico 2
+                    [fin_tarea_t2, estado_t2, minuto_ocupacion_t2] =
+                        ocuparTecnico(
+                            reloj,
+                            fin_tarea,
+                            trabajo,
+                            ult_min_trab_c
+                        );
 
-                    vectorEstado[5] = rnd_trabajo;
-                    vectorEstado[6] = trabajo.nombre;
-                    vectorEstado[7] = rnd_fin_reparacion;
-                    vectorEstado[8] = fin_reparacion;
+                    // En caso que sea un trabajo de formateo, no hace falta el tiempo fin tarea
+                    if (trabajo.letra === "C") {
+                        fin_tarea = "-";
+                    }
+
+                    // Restamos 1 a la cola
+                    cola--;
                 }
-                // en caso que no haya ninguna computadora en cola
+                // en caso que no haya ninguna PC en cola
                 else {
                     acum_tiempo_ocupacion += truncateDecimals(
-                        vectorEstado[1] - vectorEstado[14],
+                        reloj - minuto_ocupacion_t2,
                         2
                     );
 
-                    vectorEstado[5] = "";
-                    vectorEstado[6] = "";
-                    vectorEstado[7] = "";
-                    vectorEstado[8] = "";
-                    vectorEstado[10] = "";
-                    vectorEstado[13] = "Libre";
-                    vectorEstado[14] = "";
-                    vectorEstado[18] = acum_tiempo_ocupacion;
+                    // No generamos ningun trabajo, ni ningun fin de tarea y el tecnico se libera
+                    rnd_trabajo = "-";
+                    trabajo = {
+                        prob: "-",
+                        tiempo: "-",
+                        nombre: "-",
+                        letra: "-",
+                    };
+                    rnd_fin_tarea = "-";
+                    fin_tarea = "-";
+                    fin_tarea_t2 = "-";
+                    estado_t2 = "Libre";
+                    minuto_ocupacion_t2 = "-";
                 }
             }
 
             // Caso 4 de 4: fin formateo
         }
+
+        vectorEstado[0] = evento;
+        vectorEstado[1] = reloj;
+        vectorEstado[2] = rnd_llegada;
+        vectorEstado[3] = llegada;
+        vectorEstado[4] = proxima_llegada;
+        vectorEstado[5] = rnd_trabajo;
+        vectorEstado[6] = trabajo.nombre;
+        vectorEstado[7] = rnd_fin_tarea;
+        vectorEstado[8] = fin_tarea;
+        vectorEstado[9] = fin_tarea_t1;
+        vectorEstado[10] = fin_tarea_t2;
+        vectorEstado[11] = estado_t1;
+        vectorEstado[12] = minuto_ocupacion_t1;
+        vectorEstado[13] = estado_t2;
+        vectorEstado[14] = minuto_ocupacion_t2;
+        vectorEstado[15] = cola;
+        vectorEstado[16] = cola_formateos;
+        vectorEstado[17] = acum_tiempo_permanencia;
+        vectorEstado[18] = acum_pcs;
+        vectorEstado[19] = acum_tiempo_ocupacion;
 
         // agregar filas desdeHasta
         if (i + 1 >= desde && i + 1 <= hasta) {
@@ -513,74 +636,6 @@ const generacionColas = (
     }
     return filas;
 };
-
-const siguienteEventoLlegada = (vectorEstado) => {
-    // vectorEstado[4] = proxima_llegada
-    // vectorEstado[9] = fin_reparacion_t1
-    // vectorEstado[10] = fin_reparacion_t2
-    return (
-        (vectorEstado[4] < vectorEstado[9] || vectorEstado[9] === "") &&
-        (vectorEstado[4] < vectorEstado[10] || vectorEstado[10] === "")
-    );
-};
-
-const siguienteEventoFinReparacionT1 = (vectorEstado) => {
-    // vectorEstado[9] = fin_reparacion_t1
-    // vectorEstado[10] = fin_reparacion_t2
-    return vectorEstado[9] < vectorEstado[10] || vectorEstado[10] === "";
-};
-
-const siguienteEventoFinReparacionT2 = (vectorEstado) => {
-    // vectorEstado[9] = fin_reparacion_t1
-    // vectorEstado[10] = fin_reparacion_t2
-    return vectorEstado[10] < vectorEstado[9] || vectorEstado[9] === "";
-};
-const ambosTecnicosOcupados = (vectorEstado) => {
-    // vectorEstado[11] = estado_t1
-    // vectorEstado[13] = estado_t2
-    return vectorEstado[11] === "Ocupado" && vectorEstado[13] === "Ocupado";
-};
-
-const ambosTecnicosLibres = (vectorEstado) => {
-    // vectorEstado[11] = estado_t1
-    // vectorEstado[13] = estado_t2
-    return vectorEstado[11] === "Libre" && vectorEstado[13] === "Libre";
-};
-
-const tecnico1Libre = (vectorEstado) => {
-    // vectorEstado[11] = estado_t1
-    // vectorEstado[13] = estado_t2
-    return vectorEstado[11] === "Libre" && vectorEstado[13] === "Ocupado";
-};
-
-const tecnico2Libre = (vectorEstado) => {
-    // vectorEstado[11] = estado_t1
-    // vectorEstado[13] = estado_t2
-    return vectorEstado[11] === "Ocupado" && vectorEstado[13] === "Libre";
-};
-
-const ocuparTecnico = (indiceTecnico, vectorEstado, reloj, fin_reparacion) => {
-    // vectorEstado[9] = fin_reparacion_t1
-    // vectorEstado[10] = fin_reparacion_t2
-    // vectorEstado[11] = estado_t1
-    // vectorEstado[12] = hora_ocupacion_t1
-    // vectorEstado[13] = estado_t2
-    // vectorEstado[14] = hora_ocupacion_t2
-    // vectorEstado[15] = cola
-    if (indiceTecnico === 1) {
-        vectorEstado[9] = truncateDecimals(reloj + fin_reparacion, 2);
-        vectorEstado[11] = "Ocupado";
-        vectorEstado[12] = reloj;
-        vectorEstado[15] > 0 && (vectorEstado[15] -= 1);
-    } else if (indiceTecnico === 2) {
-        vectorEstado[10] = truncateDecimals(reloj + fin_reparacion, 2);
-        vectorEstado[13] = "Ocupado";
-        vectorEstado[14] = reloj;
-        vectorEstado[15] > 0 && (vectorEstado[15] -= 1);
-    }
-};
-
-const determinarProxFinReparacionTecnico = () => {};
 
 /**
  * Funcion principal que se encarga de llamar a las demas funciones y mostrar los resultados en la tabla
@@ -682,29 +737,29 @@ const simular = () => {
             ],
         },
         {
-            headerName: "Fin reparación PC",
+            headerName: "Fin tarea",
             children: [
                 {
-                    field: "rnd_fin_reparacion",
-                    headerName: "RND fin reparación",
+                    field: "rnd_fin_tarea",
+                    headerName: "RND fin tarea",
                     maxWidth: 110,
                     suppressMenu: true,
                 },
                 {
-                    field: "fin_reparacion",
-                    headerName: "Tiempo fin reparación",
+                    field: "fin_tarea",
+                    headerName: "Tiempo fin tarea",
                     maxWidth: 110,
                     suppressMenu: true,
                 },
                 {
-                    field: "proximo_fin_reparacion_t1",
-                    headerName: "Próximo fin reparación (T1)",
+                    field: "proximo_fin_tarea_t1",
+                    headerName: "Próximo fin tarea (T1)",
                     maxWidth: 110,
                     suppressMenu: true,
                 },
                 {
-                    field: "proximo_fin_reparacion_t2",
-                    headerName: "Próximo fin reparación (T2)",
+                    field: "proximo_fin_tarea_t2",
+                    headerName: "Próximo fin tarea (T2)",
                     maxWidth: 110,
                     suppressMenu: true,
                 },
@@ -750,7 +805,7 @@ const simular = () => {
                 },
                 {
                     field: "cola_formateos",
-                    headerName: "Cola PCs (formateos)",
+                    headerName: "Cola PCs formateos",
                     maxWidth: 110,
                     suppressMenu: true,
                 },
@@ -776,7 +831,7 @@ const simular = () => {
         },
     ];
 
-    gridRandVarOptions = {
+    gridOptions = {
         defaultColDef: {
             sortable: true,
             resizable: true,
@@ -788,14 +843,14 @@ const simular = () => {
         rowData: tableData,
     };
 
-    new agGrid.Grid(eGridDiv, gridRandVarOptions);
+    new agGrid.Grid(eGridDiv, gridOptions);
 
     // setea el tamaño de las columnas para que se adapten al ancho del header
     const allColumnIds = [];
-    gridRandVarOptions.columnApi.getAllColumns().forEach((column) => {
+    gridOptions.columnApi.getAllColumns().forEach((column) => {
         allColumnIds.push(column.getId());
     });
-    gridRandVarOptions.columnApi.autoSizeColumns(allColumnIds);
+    gridOptions.columnApi.autoSizeColumns(allColumnIds);
 
     btnExportToExcelRandVar.removeAttribute("hidden");
 };
@@ -804,7 +859,7 @@ const simular = () => {
  * Funcion que se encarga de exportar la tabla a excel
  */
 const exportarTablaExcel = () => {
-    gridRandVarOptions.api.exportDataAsExcel();
+    gridOptions.api.exportDataAsExcel();
 };
 
 /**
@@ -845,10 +900,10 @@ const crearFila = (vectorEstado) => {
         proxima_llegada: vectorEstado[4],
         rnd_trabajo: vectorEstado[5],
         trabajo: vectorEstado[6],
-        rnd_fin_reparacion: vectorEstado[7],
-        fin_reparacion: vectorEstado[8],
-        proximo_fin_reparacion_t1: vectorEstado[9],
-        proximo_fin_reparacion_t2: vectorEstado[10],
+        rnd_fin_tarea: vectorEstado[7],
+        fin_tarea: vectorEstado[8],
+        proximo_fin_tarea_t1: vectorEstado[9],
+        proximo_fin_tarea_t2: vectorEstado[10],
         estado_t1: vectorEstado[11],
         minuto_ocupacion_t1: vectorEstado[12],
         estado_t2: vectorEstado[13],
