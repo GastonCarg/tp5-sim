@@ -340,9 +340,9 @@ const generacionColas = (
     let filas = [];
 
     let vectorEstado = [];
-    let vectorReloj = []; //se usa al ultimo (esta explicado)
-    let total_pc_atendidas = 0;
-    let porc_equipos_no_atendidos = 0;
+    let vectorReloj = []; //se usa al ultimo (esta explicado). Para el desdeHasta del reloj.
+    let acum_llegadas_pc = 0; //para Estadistica
+    let porc_equipos_no_atendidos = 0; //para Estadistica
  
     // contador para saber la cantidad de objetos PC que se crearon
     let cantidad_pcs = 0;
@@ -366,6 +366,7 @@ const generacionColas = (
                 (proxima_llegada < fin_tarea_t2 || fin_tarea_t2 === "-")
             ) {
                 evento = "Llegada PC";
+                acum_llegadas_pc += 1;
                 reloj = vectorEstado[5];
 
                 // Generamos la proxima llegada de PC
@@ -479,7 +480,6 @@ const generacionColas = (
 
             // Caso 2 de 4: fin tarea T1
             else if (fin_tarea_t1 < fin_tarea_t2 || fin_tarea_t2 === "-") {
-                total_pc_atendidas += 1;
                 evento = "Fin tarea T1";
                 reloj = vectorEstado[10];
                 rnd_llegada = "-";
@@ -547,7 +547,6 @@ const generacionColas = (
 
             // Caso 3 de 4: fin tarea T2
             else if (fin_tarea_t2 < fin_tarea_t1 || fin_tarea_t1 === "-") {
-                total_pc_atendidas += 1;
                 evento = "Fin tarea T2";
                 reloj = vectorEstado[11];
                 rnd_llegada = "-";
@@ -665,10 +664,7 @@ const generacionColas = (
         "Promedio de permanencia en el laboratorio de un equipo: Calcular" + "%";
     
     //Porcentaje de equipos que no pueden ser atendidos en el laboratorio
-    porc_equipos_no_atendidos = (acum_pcs / total_pc_atendidas);
-    console.log(acum_pcs);
-    console.log(total_pc_atendidas);
-    console.log("Porc:",porc_equipos_no_atendidos);
+    porc_equipos_no_atendidos = (acum_pcs / acum_llegadas_pc);
     lblPorcEquiposSinAtender.innerHTML =
         "Porcentaje de equipos que no pueden ser atendidos en el laboratorio: " + truncateDecimals(porc_equipos_no_atendidos, 2) * 100 + "%";
 
