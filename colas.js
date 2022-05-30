@@ -632,11 +632,13 @@ const generacionColas = (
 
         // En caso que se haya creado una PC, la agregamos al final del vectorEstado
         if (existe_pc) {
-            vectorEstado.push(pc.estado_pc);
-            vectorEstado.push(pc.tiempo_llegada);
-            vectorEstado.push(pc.tiempo_fin_formateo);
-            existe_pc = false;
-            cantidad_pcs++;
+            if (cola < 3) {
+                vectorEstado.push(pc.estado_pc);
+                vectorEstado.push(pc.tiempo_llegada);
+                vectorEstado.push(pc.tiempo_fin_formateo);
+                existe_pc = false;
+                cantidad_pcs++;
+            }
         }
 
         // agregar filas desdeHasta
@@ -689,37 +691,26 @@ const simular = () => {
 
         // transformar el arreglo de 'vectoresEstado' a objetos 'fila' para ser visualizados en la tabla
         for (let i = 0; i < filas.length; i++) {
-            let len = filas[i].length;
-            let fila = crearFila(filas[i]);
-            while (i > 0) {
-                // fila = {
-                //     ...fila,
-                //     estado_pc: filas[i],
-                //     tiempo_llegada: filas[i + 1],
-                //     tiempo_fin_formateo: filas[i + 2],
-                // };
-                console.log(filas[i]);
-                i--;
-            }
+            let fila = crearFila(filas[i], cantidad_pcs);
             tableData.push(fila);
         }
 
         for (let i = 0; i < cantidad_pcs; i++) {
             columnasPCs.push(
                 {
-                    field: "estado_pc",
+                    field: `estado_pc${i + 1}`,
                     headerName: `Estado (PC${i + 1})`,
                     maxWidth: 150,
                     suppressMenu: true,
                 },
                 {
-                    field: "tiempo_llegada",
+                    field: `tiempo_llegada${i + 1}`,
                     headerName: `Tiempo llegada (PC${i + 1})`,
                     maxWidth: 100,
                     suppressMenu: true,
                 },
                 {
-                    field: "tiempo_fin_formateo",
+                    field: `tiempo_fin_formateo${i + 1}`,
                     headerName: `Tiempo fin formateo (PC${i + 1})`,
                     maxWidth: 110,
                     suppressMenu: true,
@@ -948,7 +939,8 @@ const borrarTabla = () => {
  * @param {Array} vectorEstado[] arreglo de 'vectorEstado'
  * @returns un objeto 'fila'
  */
-const crearFila = (vectorEstado) => {
+const crearFila = (vectorEstado, cantidad_pcs) => {
+    let aux = {};
     let fila = {
         evento: vectorEstado[0],
         reloj: vectorEstado[1],
@@ -971,6 +963,20 @@ const crearFila = (vectorEstado) => {
         acum_pcs: vectorEstado[18],
         acum_tiempo_ocupacion: vectorEstado[19],
     };
+
+    // TODO: cambiar 20 por 21
+    if (vectorEstado.length > 20) {
+        let numero_pc = 0;
+        for (let i = 20; i < vectorEstado.length; i+=3) {
+            numero_pc++;
+            // se deben con nombres distintos sino se sobreescriben los datos
+            aux[`estado_pc${numero_pc}`] = vectorEstado[i];
+            aux[`tiempo_llegada${numero_pc}`] = vectorEstado[i+1];
+            aux[`tiempo_fin_formateo${numero_pc}`] = vectorEstado[i+2];
+        }
+
+        fila = {...fila, ...aux};
+    }
 
     return fila;
 };
