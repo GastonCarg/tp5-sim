@@ -1,6 +1,8 @@
 const btnSimular = document.getElementById("btnSimular");
 const btnSimDelete = document.getElementById("btnSimDel");
-const lblCasoExito = document.getElementById("casoExito");
+const lblPromPermanenciaUnEquipo = document.getElementById("promPermanencia");
+const lblPorcEquiposSinAtender = document.getElementById("porcSinAtender");
+const lblPorcOcupTecnico = document.getElementById("porcOcup");
 const eGridDiv = document.getElementById("gridVariable");
 const btnExportToExcelRandVar = document.getElementById(
     "btnExportToExcelRandVar"
@@ -339,6 +341,8 @@ const generacionColas = (
 
     let vectorEstado = [];
     let vectorReloj = []; //se usa al ultimo (esta explicado)
+    let total_pc_atendidas = 0;
+    let porc_equipos_no_atendidos = 0;
  
     // contador para saber la cantidad de objetos PC que se crearon
     let cantidad_pcs = 0;
@@ -475,6 +479,7 @@ const generacionColas = (
 
             // Caso 2 de 4: fin tarea T1
             else if (fin_tarea_t1 < fin_tarea_t2 || fin_tarea_t2 === "-") {
+                total_pc_atendidas += 1;
                 evento = "Fin tarea T1";
                 reloj = vectorEstado[10];
                 rnd_llegada = "-";
@@ -542,6 +547,7 @@ const generacionColas = (
 
             // Caso 3 de 4: fin tarea T2
             else if (fin_tarea_t2 < fin_tarea_t1 || fin_tarea_t1 === "-") {
+                total_pc_atendidas += 1;
                 evento = "Fin tarea T2";
                 reloj = vectorEstado[11];
                 rnd_llegada = "-";
@@ -652,6 +658,25 @@ const generacionColas = (
     if (hasta < vectorReloj[vectorReloj.length-1]) {
         filas.push([...vectorEstado]);
     }
+
+    //Consignas
+    //Promedio de permanencia en el laboratorio de un equipo
+    lblPromPermanenciaUnEquipo.innerHTML =
+        "Promedio de permanencia en el laboratorio de un equipo: Calcular" + "%";
+    
+    //Porcentaje de equipos que no pueden ser atendidos en el laboratorio
+    porc_equipos_no_atendidos = (acum_pcs / total_pc_atendidas);
+    console.log(acum_pcs);
+    console.log(total_pc_atendidas);
+    console.log("Porc:",porc_equipos_no_atendidos);
+    lblPorcEquiposSinAtender.innerHTML =
+        "Porcentaje de equipos que no pueden ser atendidos en el laboratorio: " + truncateDecimals(porc_equipos_no_atendidos, 2) * 100 + "%";
+
+    //Porcentaje de ocupación de los técnicos del laboratorio
+    lblPorcOcupTecnico.innerHTML =
+        "Porcentaje de ocupación de los técnicos del laboratorio: Calcular" + "%";
+
+
     return [filas, cantidad_pcs];
 };
 
