@@ -343,6 +343,7 @@ const generacionColas = (
     let vectorReloj = []; //se usa al ultimo (esta explicado). Para el desdeHasta del reloj.
     let acum_llegadas_pc = 0; //para Estadistica
     let porc_equipos_no_atendidos = 0; //para Estadistica
+    let porc_ocup_tecnicos = 0; //para Estadistica
  
     // contador para saber la cantidad de objetos PC que se crearon
     let cantidad_pcs = 0;
@@ -654,6 +655,8 @@ const generacionColas = (
     }
 
     // agregar ultima fila en caso que 'hasta' sea menor que la cantidad de filas
+    console.log(vectorReloj[vectorReloj.length-1])
+    console.log(reloj);
     if (hasta < vectorReloj[vectorReloj.length-1]) {
         filas.push([...vectorEstado]);
     }
@@ -669,8 +672,9 @@ const generacionColas = (
         "Porcentaje de equipos que no pueden ser atendidos en el laboratorio: " + truncateDecimals(porc_equipos_no_atendidos, 2) * 100 + "%";
 
     //Porcentaje de ocupación de los técnicos del laboratorio
+    porc_ocup_tecnicos = (acum_tiempo_ocupacion / reloj);
     lblPorcOcupTecnico.innerHTML =
-        "Porcentaje de ocupación de los técnicos del laboratorio: Calcular" + "%";
+        "Porcentaje de ocupación de los técnicos: " + truncateDecimals(porc_ocup_tecnicos, 2) * 100 + "%";
 
 
     return [filas, cantidad_pcs];
