@@ -338,7 +338,8 @@ const generacionColas = (
     let filas = [];
 
     let vectorEstado = [];
-
+    let vectorReloj = []; //se usa al ultimo (esta explicado)
+ 
     // contador para saber la cantidad de objetos PC que se crearon
     let cantidad_pcs = 0;
 
@@ -361,7 +362,7 @@ const generacionColas = (
                 (proxima_llegada < fin_tarea_t2 || fin_tarea_t2 === "-")
             ) {
                 evento = "Llegada PC";
-                reloj = vectorEstado[4];
+                reloj = vectorEstado[5];
 
                 // Generamos la proxima llegada de PC
                 [rnd_llegada, llegada, proxima_llegada] =
@@ -475,7 +476,7 @@ const generacionColas = (
             // Caso 2 de 4: fin tarea T1
             else if (fin_tarea_t1 < fin_tarea_t2 || fin_tarea_t2 === "-") {
                 evento = "Fin tarea T1";
-                reloj = vectorEstado[9];
+                reloj = vectorEstado[10];
                 rnd_llegada = "-";
                 llegada = "-";
 
@@ -483,7 +484,7 @@ const generacionColas = (
                 if (cola_formateos.length > 1000) {
                     // obtenemos el próximo trabajo de formateo
                     let trabajoFormateo = cola_formateos.shift();
-                    vectorEstado[1] = reloj + ult_min_trab_c;
+                    vectorEstado[2] = reloj + ult_min_trab_c;
                 }
                 // en caso que haya alguna PC en cola
                 else if (cola > 0) {
@@ -542,7 +543,7 @@ const generacionColas = (
             // Caso 3 de 4: fin tarea T2
             else if (fin_tarea_t2 < fin_tarea_t1 || fin_tarea_t1 === "-") {
                 evento = "Fin tarea T2";
-                reloj = vectorEstado[10];
+                reloj = vectorEstado[11];
                 rnd_llegada = "-";
                 llegada = "-";
 
@@ -550,7 +551,7 @@ const generacionColas = (
                 if (cola_formateos.length > 1000) {
                     // obtenemos el próximo trabajo de formateo
                     let trabajoFormateo = cola_formateos.shift();
-                    vectorEstado[1] = reloj + ult_min_trab_c;
+                    vectorEstado[2] = reloj + ult_min_trab_c;
                 }
                 // en caso que haya alguna PC en cola
                 else if (cola > 0) {
@@ -609,26 +610,27 @@ const generacionColas = (
             // Caso 4 de 4: fin formateo
         }
 
-        vectorEstado[0] = evento;
-        vectorEstado[1] = reloj;
-        vectorEstado[2] = rnd_llegada;
-        vectorEstado[3] = llegada;
-        vectorEstado[4] = proxima_llegada;
-        vectorEstado[5] = rnd_trabajo;
-        vectorEstado[6] = trabajo.nombre;
-        vectorEstado[7] = rnd_fin_tarea;
-        vectorEstado[8] = fin_tarea;
-        vectorEstado[9] = fin_tarea_t1;
-        vectorEstado[10] = fin_tarea_t2;
-        vectorEstado[11] = estado_t1;
-        vectorEstado[12] = tiempo_ocupacion_t1;
-        vectorEstado[13] = estado_t2;
-        vectorEstado[14] = tiempo_ocupacion_t2;
-        vectorEstado[15] = cola;
-        vectorEstado[16] = cola_formateos;
-        vectorEstado[17] = acum_tiempo_permanencia;
-        vectorEstado[18] = acum_pcs;
-        vectorEstado[19] = acum_tiempo_ocupacion;
+        vectorEstado[0] = i;
+        vectorEstado[1] = evento;
+        vectorEstado[2] = reloj;
+        vectorEstado[3] = rnd_llegada;
+        vectorEstado[4] = llegada;
+        vectorEstado[5] = proxima_llegada;
+        vectorEstado[6] = rnd_trabajo;
+        vectorEstado[7] = trabajo.nombre;
+        vectorEstado[8] = rnd_fin_tarea;
+        vectorEstado[9] = fin_tarea;
+        vectorEstado[10] = fin_tarea_t1;
+        vectorEstado[11] = fin_tarea_t2;
+        vectorEstado[12] = estado_t1;
+        vectorEstado[13] = tiempo_ocupacion_t1;
+        vectorEstado[14] = estado_t2;
+        vectorEstado[15] = tiempo_ocupacion_t2;
+        vectorEstado[16] = cola;
+        vectorEstado[17] = cola_formateos;
+        vectorEstado[18] = acum_tiempo_permanencia;
+        vectorEstado[19] = acum_pcs;
+        vectorEstado[20] = acum_tiempo_ocupacion;
 
         // En caso que se haya creado una PC, la agregamos al final del vectorEstado
         if (existe_pc) {
@@ -640,13 +642,14 @@ const generacionColas = (
         }
 
         // agregar filas desdeHasta
-        if (i + 1 >= desde && i + 1 <= hasta) {
+        if (reloj >= desde && reloj <= hasta) {
             filas.push([...vectorEstado]);
         }
+        vectorReloj.push(reloj); //para obtener el ultimo valor del reloj y usarlo para agregar la ultima fila.
     }
 
     // agregar ultima fila en caso que 'hasta' sea menor que la cantidad de filas
-    if (hasta < n) {
+    if (hasta < vectorReloj[vectorReloj.length-1]) {
         filas.push([...vectorEstado]);
     }
     return [filas, cantidad_pcs];
@@ -736,6 +739,12 @@ const simular = () => {
         {
             headerName: "",
             children: [
+                {
+                    field: "n",
+                    headerName: "N",
+                    maxWidth: 100,
+                    suppressMenu: true,
+                },
                 {
                     field: "evento",
                     headerName: "Evento",
@@ -951,26 +960,27 @@ const borrarTabla = () => {
  */
 const crearFila = (vectorEstado) => {
     let fila = {
-        evento: vectorEstado[0],
-        reloj: vectorEstado[1],
-        rnd_llegada: vectorEstado[2],
-        llegada: vectorEstado[3],
-        proxima_llegada: vectorEstado[4],
-        rnd_trabajo: vectorEstado[5],
-        trabajo: vectorEstado[6],
-        rnd_fin_tarea: vectorEstado[7],
-        fin_tarea: vectorEstado[8],
-        proximo_fin_tarea_t1: vectorEstado[9],
-        proximo_fin_tarea_t2: vectorEstado[10],
-        estado_t1: vectorEstado[11],
-        tiempo_ocupacion_t1: vectorEstado[12],
-        estado_t2: vectorEstado[13],
-        tiempo_ocupacion_t2: vectorEstado[14],
-        cola: vectorEstado[15],
-        cola_formateos: vectorEstado[16],
-        acum_tiempo_permanencia: vectorEstado[17],
-        acum_pcs: vectorEstado[18],
-        acum_tiempo_ocupacion: vectorEstado[19],
+        n: vectorEstado[0],
+        evento: vectorEstado[1],
+        reloj: vectorEstado[2],
+        rnd_llegada: vectorEstado[3],
+        llegada: vectorEstado[4],
+        proxima_llegada: vectorEstado[5],
+        rnd_trabajo: vectorEstado[6],
+        trabajo: vectorEstado[7],
+        rnd_fin_tarea: vectorEstado[8],
+        fin_tarea: vectorEstado[9],
+        proximo_fin_tarea_t1: vectorEstado[10],
+        proximo_fin_tarea_t2: vectorEstado[11],
+        estado_t1: vectorEstado[12],
+        tiempo_ocupacion_t1: vectorEstado[13],
+        estado_t2: vectorEstado[14],
+        tiempo_ocupacion_t2: vectorEstado[15],
+        cola: vectorEstado[16],
+        cola_formateos: vectorEstado[17],
+        acum_tiempo_permanencia: vectorEstado[18],
+        acum_pcs: vectorEstado[19],
+        acum_tiempo_ocupacion: vectorEstado[20],
     };
 
     return fila;
