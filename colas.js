@@ -689,18 +689,19 @@ const simular = () => {
 
         // transformar el arreglo de 'vectoresEstado' a objetos 'fila' para ser visualizados en la tabla
         for (let i = 0; i < filas.length; i++) {
+            console.log(filas[i]);
             let len = filas[i].length;
             let fila = crearFila(filas[i]);
-            while (i > 0) {
-                // fila = {
-                //     ...fila,
-                //     estado_pc: filas[i],
-                //     tiempo_llegada: filas[i + 1],
-                //     tiempo_fin_formateo: filas[i + 2],
-                // };
-                console.log(filas[i]);
-                i--;
-            }
+            // while (i > 0) {
+            //     // fila = {
+            //     //     ...fila,
+            //     //     estado_pc: filas[i],
+            //     //     tiempo_llegada: filas[i + 1],
+            //     //     tiempo_fin_formateo: filas[i + 2],
+            //     // };
+            //     console.log(filas[i]);
+            //     i--;
+            // }
             tableData.push(fila);
         }
 
