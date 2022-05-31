@@ -61,7 +61,7 @@ const tomarInputs = () => {
         return alert(
             "las probabilidades deben ser valores entre 0 y 1 (sin incluir el 1)."
         );
-    if (+(trab_a + trab_b + trab_c + trab_d + trab_e).toFixed(12) != 1)
+    if (+(trab_a + trab_b + trab_c + trab_d + trab_e).toFixed(2) != 1)
         return alert("La sumatoria de las probabilidades debe ser igual a 1.");
 
     const prob_acum_trabajos = calcularProbabilidadAcumulada([
@@ -158,7 +158,7 @@ const calcularProbabilidadAcumulada = (probs) => {
     for (let i = 0; i < probs.length; i++) {
         acu += probs[i];
         // hago este toFixed para que se redondee a 2 decimales
-        acu = +acu.toFixed(12);
+        acu = +acu.toFixed(2);
         probs_acum[i] = acu;
     }
 
@@ -342,8 +342,10 @@ const generacionColas = (
     let filas = [];
 
     let vectorEstado = [];
-    let vectorReloj = []; //se usa al ultimo (esta explicado). Para el desdeHasta del reloj.
+    let vectorReloj = [];
     let acum_llegadas_pc = 0; //para Estadistica
+    let total_pc_antendidas = 0; //para Estadistica.
+    let prom_permanencia_equipo = 0; //para Estadistica
     let porc_equipos_no_atendidos = 0; //para Estadistica
     let porc_ocup_tecnico1 = 0; //para Estadistica
     let porc_ocup_tecnico2 = 0; //para Estadistica
@@ -400,6 +402,13 @@ const generacionColas = (
                     );
 
                     existe_pc = true;
+                    
+                    //REVISAR
+                    if (pc.estado_pc === "////"){
+                        acum_tiempo_permanencia += (reloj - pc.tiempo_llegada).toFixed(2);
+                        total_pc_antendidas += 1;
+                    }
+
                 }
 
                 // Validamos cual es el tecnico que tomará el trabajo
@@ -454,6 +463,12 @@ const generacionColas = (
                     );
 
                     existe_pc = true;
+                    
+                    //REVISAR!
+                    if (pc.estado_pc === "////"){
+                        acum_tiempo_permanencia += (reloj - pc.tiempo_llegada).toFixed(2);
+                        total_pc_antendidas += 1;
+                    }
 
                     // No generamos el proximo trabajo, ni el proximo fin de tarea
                     rnd_trabajo = "-";
@@ -645,8 +660,8 @@ const generacionColas = (
         vectorEstado[17] = cola_formateos;
         vectorEstado[18] = acum_tiempo_permanencia;
         vectorEstado[19] = acum_pcs;
-        vectorEstado[20] = acum_tiempo_ocupacion_t1;
-        vectorEstado[21] = acum_tiempo_ocupacion_t2;
+        vectorEstado[20] = (acum_tiempo_ocupacion_t1).toFixed(2);
+        vectorEstado[21] = (acum_tiempo_ocupacion_t2).toFixed(2);
 
         // En caso que se haya creado una PC, la agregamos al final del vectorEstado
         if (existe_pc) {
@@ -677,8 +692,9 @@ const generacionColas = (
 
     //Consignas
     //Promedio de permanencia en el laboratorio de un equipo
+    prom_permanencia_equipo = (acum_tiempo_permanencia / total_pc_antendidas);
     lblPromPermanenciaUnEquipo.innerHTML =
-        "Promedio de permanencia en el laboratorio de un equipo: Calcular" + "%";
+        "Promedio de permanencia en el laboratorio de un equipo: " + truncateDecimals(prom_permanencia_equipo, 2) + " %";
     
     //Porcentaje de equipos que no pueden ser atendidos en el laboratorio
     porc_equipos_no_atendidos = (acum_pcs / acum_llegadas_pc);
@@ -692,8 +708,6 @@ const generacionColas = (
         "Porcentaje de ocupación de los técnicos: " + "Tecnico1: " + truncateDecimals(porc_ocup_tecnico1, 2) * 100 + "% - " +
                                                     "Tecnico2: " + truncateDecimals(porc_ocup_tecnico2, 2) * 100 + "%"
     
-    //console.log(acum_tiempo_ocupacion, reloj);
-
 
     return [filas, cantidad_pcs];
 };
