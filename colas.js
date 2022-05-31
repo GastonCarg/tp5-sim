@@ -377,29 +377,9 @@ const generacionColas = (
                             menor_tiempo_fin_formateo = vectorEstado[j];
                             indice_menor_tiempo_fin_formateo = j;
                     }
-                    // if (typeof vectorEstado[j + 3] !== 'undefined') {
-                    //     if (vectorEstado[j + 3] !== "-" && vectorEstado[j] !== "-")
-                    //         if(vectorEstado[j] < vectorEstado[j + 3]){
-                    //             menor_tiempo_fin_formateo = vectorEstado[j];
-                    //             indice_menor_tiempo_fin_formateo = j;
-                    //         }
-                    //     else if (vectorEstado[j] !== "-") {
-                    //         menor_tiempo_fin_formateo = vectorEstado[j];
-                    //         indice_menor_tiempo_fin_formateo = j;
-                    //     }
-                    //     else {
-                    //         menor_tiempo_fin_formateo = vectorEstado[j + 3];
-                    //         indice_menor_tiempo_fin_formateo = j + 3;
-                    //     }
-                    // }
-                    // else if (vectorEstado[j] !== "-" ) {
-                    //     menor_tiempo_fin_formateo = vectorEstado[j];
-                    //     indice_menor_tiempo_fin_formateo = j;
-                    // }
                 }
             }
 
-            console.log("i", i);
             console.log("menor_tiempo_fin_formateo", menor_tiempo_fin_formateo);
             // Caso 1 de 4: llegada de PC
             if (
@@ -532,10 +512,9 @@ const generacionColas = (
                 llegada = "-";
 
                 // if (colaFormateos.length > 0) {
-                if (cola_formateos.length > 1000) {
+                if (cola_formateos.length > 0) {
                     // obtenemos el próximo trabajo de formateo
-                    let trabajoFormateo = cola_formateos.shift();
-                    vectorEstado[1] = reloj + ult_min_trab_c;
+
                 }
                 // en caso que haya alguna PC en cola
                 else if (cola > 0) {
@@ -667,7 +646,7 @@ const generacionColas = (
                 if (estado_t1 === "Libre" && estado_t2 === "Libre") {
                     let rnd_tec = truncateDecimals(Math.random(), 2);
                     if (rnd_tec < 0.5) {
-                        evento = "Fin tarea T1";
+                        evento = "Fin formateo T1";
                         reloj = vectorEstado[indice_menor_tiempo_fin_formateo];
                         rnd_llegada = "-";
                         llegada = "-";
@@ -683,7 +662,7 @@ const generacionColas = (
                         menor_tiempo_fin_formateo = "-";
                         indice_menor_tiempo_fin_formateo = "-";
                     } else {
-                        evento = "Fin tarea T2";
+                        evento = "Fin formateo T2";
                         reloj = vectorEstado[indice_menor_tiempo_fin_formateo];
                         rnd_llegada = "-";
                         llegada = "-";
@@ -700,7 +679,7 @@ const generacionColas = (
                         indice_menor_tiempo_fin_formateo = "-";
                     }
                 } else if (estado_t1 === "Libre" && estado_t2 === "Ocupado") {
-                    evento = "Fin tarea T1";
+                    evento = "Fin formateo T1";
                     reloj = vectorEstado[indice_menor_tiempo_fin_formateo];
                     rnd_llegada = "-";
                     llegada = "-";
@@ -716,7 +695,7 @@ const generacionColas = (
                     menor_tiempo_fin_formateo = "-";
                     indice_menor_tiempo_fin_formateo = "-";
                 } else if (estado_t1 === "Ocupado" && estado_t2 === "Libre") {
-                    evento = "Fin tarea T2";
+                    evento = "Fin formateo T2";
                     reloj = vectorEstado[indice_menor_tiempo_fin_formateo];
                     rnd_llegada = "-";
                     llegada = "-";
