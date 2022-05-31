@@ -254,16 +254,21 @@ const generarPC = (
     tecnicoDisponible,
     trabajo,
     reloj,
-    fin_tarea,
-    ult_min_trab_c
+
+    ult_min_trab_c,
+    distrib_trab_a,
+    distrib_trab_b
 ) => {
     let pc;
+    let rnd_fin_tarea_formateo = 0;
+    
     if (tecnicoDisponible) {
         if (trabajo.letra === "C") {
+            rnd_fin_tarea_formateo = truncateDecimals(Math.random(), 2);
             pc = {
                 estado_pc: "Iniciando formateo",
                 tiempo_llegada: reloj,
-                tiempo_fin_formateo: fin_tarea - ult_min_trab_c,
+                tiempo_fin_formateo: truncateDecimals(generadorUniforme(distrib_trab_a, distrib_trab_b, rnd_fin_tarea_formateo) + reloj + trabajo.tiempo - ult_min_trab_c, 2),
             };
         } else {
             pc = {
@@ -341,6 +346,12 @@ const generacionColas = (
     };
     let filas = [];
 
+    let trabajos_formateos = [];
+    let menor_tiempo_fin_formateo = "-";
+    let indice_menor_tiempo_fin_formateo = "-";
+    let cola_formateos_aux = 0;
+    let arr_cola_formateos = [];
+
     let vectorEstado = [];
     let vectorReloj = [];
     let acum_llegadas_pc = 0; //para Estadistica
@@ -364,11 +375,38 @@ const generacionColas = (
 
             [rnd_llegada, llegada, proxima_llegada] = generarProximaLlegada(0);
         } else {
+
             // validamos cuál es el evento que llega primero.
+            if (vectorEstado.length > 22) {
+                // recorremos el array a partir del elemento 20 y devolvemos el que tiene menor valor de tiempo fin formateo
+                for (let j = 24; j < vectorEstado.length; j += 3) {
+                    if (menor_tiempo_fin_formateo !== "-") {
+                        if (vectorEstado[j] < menor_tiempo_fin_formateo) {
+                            menor_tiempo_fin_formateo = vectorEstado[j];
+                            indice_menor_tiempo_fin_formateo = j;
+                        }
+                    }
+                    else if (vectorEstado[j] !== "-") {
+                            menor_tiempo_fin_formateo = vectorEstado[j];
+                            indice_menor_tiempo_fin_formateo = j;
+                    }
+                }
+            }
+
+            // Validamos que en la iteracion anterior se haya agregado una pc a la cola de formateos para que no se tome
+            // nuevamente que el proximo evento sea uno de pc cuando ambos tecnicos estan ocupados.
+            if (cola_formateos > cola_formateos_aux) {
+                menor_tiempo_fin_formateo = "-";
+                indice_menor_tiempo_fin_formateo = "-";
+            }
+            cola_formateos_aux = cola_formateos;
+
+
             // Caso 1 de 4: llegada de PC
             if (
                 (proxima_llegada < fin_tarea_t1 || fin_tarea_t1 === "-") &&
-                (proxima_llegada < fin_tarea_t2 || fin_tarea_t2 === "-")
+                (proxima_llegada < fin_tarea_t2 || fin_tarea_t2 === "-")  &&
+                (proxima_llegada < menor_tiempo_fin_formateo || menor_tiempo_fin_formateo === "-")
             ) {
                 evento = "Llegada PC";
                 acum_llegadas_pc += 1;
@@ -397,8 +435,9 @@ const generacionColas = (
                         true,
                         trabajo,
                         reloj,
-                        fin_tarea,
-                        ult_min_trab_c
+                        ult_min_trab_c,
+                        distrib_trab_a,
+                        distrib_trab_b
                     );
 
                     existe_pc = true;
@@ -458,8 +497,9 @@ const generacionColas = (
                         false,
                         trabajo,
                         reloj,
-                        fin_tarea,
-                        ult_min_trab_c
+                        ult_min_trab_c,
+                        distrib_trab_a,
+                        distrib_trab_b
                     );
 
                     existe_pc = true;
@@ -497,17 +537,17 @@ const generacionColas = (
             }
 
             // Caso 2 de 4: fin tarea T1
-            else if (fin_tarea_t1 < fin_tarea_t2 || fin_tarea_t2 === "-") {
+            else if ((fin_tarea_t1 < fin_tarea_t2 || fin_tarea_t2 === "-") &&
+            (fin_tarea_t1 < menor_tiempo_fin_formateo || menor_tiempo_fin_formateo === "-")) {
                 evento = "Fin tarea T1";
                 reloj = vectorEstado[10];
                 rnd_llegada = "-";
                 llegada = "-";
 
                 // if (colaFormateos.length > 0) {
-                if (cola_formateos.length > 1000) {
+                if (cola_formateos > 0) {
                     // obtenemos el próximo trabajo de formateo
-                    let trabajoFormateo = cola_formateos.shift();
-                    vectorEstado[2] = reloj + ult_min_trab_c;
+                    console.log("cola formateo t1", arr_cola_formateos);
                 }
                 // en caso que haya alguna PC en cola
                 else if (cola > 0) {
@@ -567,17 +607,19 @@ const generacionColas = (
             }
 
             // Caso 3 de 4: fin tarea T2
-            else if (fin_tarea_t2 < fin_tarea_t1 || fin_tarea_t1 === "-") {
+            else if ((fin_tarea_t2 < fin_tarea_t1 || fin_tarea_t1 === "-") &&
+            (fin_tarea_t2 < menor_tiempo_fin_formateo || menor_tiempo_fin_formateo === "-")) {
                 evento = "Fin tarea T2";
                 reloj = vectorEstado[11];
                 rnd_llegada = "-";
                 llegada = "-";
 
                 // if (colaFormateos.length > 0) {
-                if (cola_formateos.length > 1000) {
+                if (cola_formateos > 0) {
                     // obtenemos el próximo trabajo de formateo
-                    let trabajoFormateo = cola_formateos.shift();
-                    vectorEstado[2] = reloj + ult_min_trab_c;
+                    //let trabajoFormateo = cola_formateos.shift();
+                    //vectorEstado[2] = reloj + ult_min_trab_c;
+                    console.log("cola formateo t2", arr_cola_formateos);
                 }
                 // en caso que haya alguna PC en cola
                 else if (cola > 0) {
@@ -638,6 +680,93 @@ const generacionColas = (
             }
 
             // Caso 4 de 4: fin formateo
+            else {
+                // Validamos cual es el tecnico que tomará el trabajo
+                estado_t1 = "Ocupado";
+                estado_t2 = "Ocupado";
+                if (estado_t1 === "Libre" && estado_t2 === "Libre") {
+                    let rnd_tec = truncateDecimals(Math.random(), 2);
+                    if (rnd_tec < 0.5) {
+                        evento = "Fin formateo T1";
+                        reloj = vectorEstado[indice_menor_tiempo_fin_formateo];
+                        rnd_llegada = "-";
+                        llegada = "-";
+                        fin_tarea_t1 = reloj + ult_min_trab_c;
+                        estado_t1 = "Ocupado fin formateo";
+                        tiempo_ocupacion_t1 = reloj;
+                        rnd_trabajo = "-";
+                        trabajo = "-";
+                        rnd_fin_tarea = "-";
+                        fin_tarea = "-";
+                        vectorEstado[indice_menor_tiempo_fin_formateo - 2] = "Fin formateo";
+                        vectorEstado[indice_menor_tiempo_fin_formateo] = "-";
+                        menor_tiempo_fin_formateo = "-";
+                        indice_menor_tiempo_fin_formateo = "-";
+                    } else {
+                        evento = "Fin formateo T2";
+                        reloj = vectorEstado[indice_menor_tiempo_fin_formateo];
+                        rnd_llegada = "-";
+                        llegada = "-";
+                        fin_tarea_t2 = reloj + ult_min_trab_c;
+                        estado_t2 = "Ocupado fin formateo";
+                        tiempo_ocupacion_t2 = reloj;
+                        rnd_trabajo = "-";
+                        trabajo = "-";
+                        rnd_fin_tarea = "-";
+                        fin_tarea = "-";
+                        vectorEstado[indice_menor_tiempo_fin_formateo - 2] = "Fin formateo";
+                        vectorEstado[indice_menor_tiempo_fin_formateo] = "-";
+                        menor_tiempo_fin_formateo = "-";
+                        indice_menor_tiempo_fin_formateo = "-";
+                    }
+                } else if (estado_t1 === "Libre" && estado_t2 === "Ocupado") {
+                    evento = "Fin formateo T1";
+                    reloj = vectorEstado[indice_menor_tiempo_fin_formateo];
+                    rnd_llegada = "-";
+                    llegada = "-";
+                    fin_tarea_t1 = reloj + ult_min_trab_c;
+                    estado_t1 = "Ocupado fin formateo";
+                    tiempo_ocupacion_t1 = reloj;
+                    rnd_trabajo = "-";
+                    trabajo = "-";
+                    rnd_fin_tarea = "-";
+                    fin_tarea = "-";
+                    vectorEstado[indice_menor_tiempo_fin_formateo - 2] = "Fin formateo";
+                    vectorEstado[indice_menor_tiempo_fin_formateo] = "-";
+                    menor_tiempo_fin_formateo = "-";
+                    indice_menor_tiempo_fin_formateo = "-";
+                } else if (estado_t1 === "Ocupado" && estado_t2 === "Libre") {
+                    evento = "Fin formateo T2";
+                    reloj = vectorEstado[indice_menor_tiempo_fin_formateo];
+                    rnd_llegada = "-";
+                    llegada = "-";
+                    fin_tarea_t2 = reloj + ult_min_trab_c;
+                    estado_t2 = "Ocupado fin formateo";
+                    tiempo_ocupacion_t2 = reloj;
+                    rnd_trabajo = "-";
+                    trabajo = "-";
+                    rnd_fin_tarea = "-";
+                    fin_tarea = "-";
+                    vectorEstado[indice_menor_tiempo_fin_formateo - 2] = "Fin formateo";
+                    vectorEstado[indice_menor_tiempo_fin_formateo] = "-";
+                    menor_tiempo_fin_formateo = "-";
+                    indice_menor_tiempo_fin_formateo = "-";
+                }
+                // En caso que los dos tecnicos esten ocupados, incrementamos la cola de formateos.
+                else {
+                    cola_formateos++;
+                    let trab = {
+                        indice: indice_menor_tiempo_fin_formateo,
+                        estado: vectorEstado[indice_menor_tiempo_fin_formateo - 2],
+                        tiempo: vectorEstado[indice_menor_tiempo_fin_formateo],
+                    }
+                    for (let i = 0; i < arr_cola_formateos.length; i++) {
+                        if (arr_cola_formateos[i].indice !== trab.indice) {
+                            arr_cola_formateos[i] = trab;
+                        }
+                    }
+                }
+            }
         }
 
         vectorEstado[0] = i;
@@ -665,11 +794,13 @@ const generacionColas = (
 
         // En caso que se haya creado una PC, la agregamos al final del vectorEstado
         if (existe_pc) {
-            vectorEstado.push(pc.estado_pc);
-            vectorEstado.push(pc.tiempo_llegada);
-            vectorEstado.push(pc.tiempo_fin_formateo);
-            existe_pc = false;
-            cantidad_pcs++;
+            if (cola < 3) {
+                vectorEstado.push(pc.estado_pc);
+                vectorEstado.push(pc.tiempo_llegada);
+                vectorEstado.push(pc.tiempo_fin_formateo);
+                existe_pc = false;
+                cantidad_pcs++;
+            }
         }
 
         // agregar filas desdeHasta
@@ -749,38 +880,26 @@ const simular = () => {
 
         // transformar el arreglo de 'vectoresEstado' a objetos 'fila' para ser visualizados en la tabla
         for (let i = 0; i < filas.length; i++) {
-            console.log(filas[i]);
-            let len = filas[i].length;
-            let fila = crearFila(filas[i]);
-            // while (i > 0) {
-            //     // fila = {
-            //     //     ...fila,
-            //     //     estado_pc: filas[i],
-            //     //     tiempo_llegada: filas[i + 1],
-            //     //     tiempo_fin_formateo: filas[i + 2],
-            //     // };
-            //     console.log(filas[i]);
-            //     i--;
-            // }
+            let fila = crearFila(filas[i], cantidad_pcs);
             tableData.push(fila);
         }
 
         for (let i = 0; i < cantidad_pcs; i++) {
             columnasPCs.push(
                 {
-                    field: "estado_pc",
+                    field: `estado_pc${i + 1}`,
                     headerName: `Estado (PC${i + 1})`,
                     maxWidth: 150,
                     suppressMenu: true,
                 },
                 {
-                    field: "tiempo_llegada",
+                    field: `tiempo_llegada${i + 1}`,
                     headerName: `Tiempo llegada (PC${i + 1})`,
                     maxWidth: 100,
                     suppressMenu: true,
                 },
                 {
-                    field: "tiempo_fin_formateo",
+                    field: `tiempo_fin_formateo${i + 1}`,
                     headerName: `Tiempo fin formateo (PC${i + 1})`,
                     maxWidth: 110,
                     suppressMenu: true,
@@ -1021,7 +1140,8 @@ const borrarTabla = () => {
  * @param {Array} vectorEstado[] arreglo de 'vectorEstado'
  * @returns un objeto 'fila'
  */
-const crearFila = (vectorEstado) => {
+const crearFila = (vectorEstado, cantidad_pcs) => {
+    let aux = {};
     let fila = {
         n: vectorEstado[0],
         evento: vectorEstado[1],
@@ -1046,6 +1166,19 @@ const crearFila = (vectorEstado) => {
         acum_tiempo_ocupacion_t1: vectorEstado[20],
         acum_tiempo_ocupacion_t2: vectorEstado[21],
     };
+
+    if (vectorEstado.length > 22) {
+        let numero_pc = 0;
+        for (let i = 22; i < vectorEstado.length; i += 3) {
+            numero_pc++;
+            // se deben con nombres distintos sino se sobreescriben los datos
+            aux[`estado_pc${numero_pc}`] = vectorEstado[i];
+            aux[`tiempo_llegada${numero_pc}`] = vectorEstado[i + 1];
+            aux[`tiempo_fin_formateo${numero_pc}`] = vectorEstado[i + 2];
+        }
+
+        fila = { ...fila, ...aux };
+    }
 
     return fila;
 };
