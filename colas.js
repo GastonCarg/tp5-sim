@@ -283,6 +283,7 @@ const generarPC = (
     return pc;
 };
 
+
 /**
  *
  * @param {number} n
@@ -351,11 +352,10 @@ const generacionColas = (
     let cantidad_pcs = 0;
 
     // recorrer por la cantidad de filas
-    // TODO: Ver que puede cortar antes, si llega al valor de X!!!!!!!!!!!!!!!!!!!!!!
+    // TODO: Ver que puede cortar antes, si llega al valor de X!!!!!!!!!!!!!!!!!!!!!! OK ESTO
     for (let i = 0; i < n; i++) {
         // esta bandera sirve para determinar si hay que agregar columnas al final de la tabla
         let existe_pc = false;
-
         if (i === 0) {
             evento = "Inicio";
             reloj = 0;
@@ -661,7 +661,13 @@ const generacionColas = (
         if (reloj >= desde && reloj <= hasta) {
             filas.push([...vectorEstado]);
         }
-        vectorReloj.push(reloj); //para obtener el ultimo valor del reloj y usarlo para agregar la ultima fila.
+        
+        //Comparar si el reloj en cada iteracion es mayor que el x ingresado, en ese caso corta la simulacion.
+        vectorReloj.push(reloj);
+
+        if (vectorReloj[i] >= x){
+            break;
+        }
     }
 
     // agregar ultima fila en caso que 'hasta' sea menor que la cantidad de filas
