@@ -265,7 +265,7 @@ const generarPC = (
             pc = {
                 estado_pc: "Iniciando formateo",
                 tiempo_llegada: reloj,
-                tiempo_fin_formateo: generadorUniforme(distrib_trab_a, distrib_trab_b, rnd_fin_tarea_formateo) + reloj + trabajo.tiempo - ult_min_trab_c,
+                tiempo_fin_formateo: truncateDecimals(generadorUniforme(distrib_trab_a, distrib_trab_b, rnd_fin_tarea_formateo) + reloj + trabajo.tiempo - ult_min_trab_c, 2),
             };
         } else {
             pc = {
@@ -330,7 +330,7 @@ const generacionColas = (
     let estado_t2 = "Libre";
     let tiempo_ocupacion_t2 = "-";
     let cola = 0;
-    let cola_formateos = 0;
+    let cola_formateos = 0
     let acum_tiempo_permanencia = 0;
     let acum_pcs = 0;
     let acum_tiempo_ocupacion = 0;
@@ -343,6 +343,8 @@ const generacionColas = (
     let trabajos_formateos = [];
     let menor_tiempo_fin_formateo = "-";
     let indice_menor_tiempo_fin_formateo = "-";
+    let cola_formateos_aux = 0;
+    let arr_cola_formateos = [];
 
     let vectorEstado = [];
 
@@ -380,7 +382,14 @@ const generacionColas = (
                 }
             }
 
-            console.log("menor_tiempo_fin_formateo", menor_tiempo_fin_formateo);
+            // Validamos que en la iteracion anterior se haya agregado una pc a la cola de formateos para que no se tome
+            // nuevamente que el proximo evento sea uno de pc cuando ambos tecnicos estan ocupados.
+            if (cola_formateos > cola_formateos_aux) {
+                menor_tiempo_fin_formateo = "-";
+                indice_menor_tiempo_fin_formateo = "-";
+            }
+            cola_formateos_aux = cola_formateos;
+
             // Caso 1 de 4: llegada de PC
             if (
                 (proxima_llegada < fin_tarea_t1 || fin_tarea_t1 === "-") &&
@@ -512,9 +521,9 @@ const generacionColas = (
                 llegada = "-";
 
                 // if (colaFormateos.length > 0) {
-                if (cola_formateos.length > 0) {
+                if (cola_formateos > 0) {
                     // obtenemos el próximo trabajo de formateo
-
+                    console.log("cola formateo t1", arr_cola_formateos);
                 }
                 // en caso que haya alguna PC en cola
                 else if (cola > 0) {
@@ -580,11 +589,11 @@ const generacionColas = (
                 rnd_llegada = "-";
                 llegada = "-";
 
-                // if (colaFormateos.length > 0) {
-                if (cola_formateos.length > 1000) {
+                if (cola_formateos > 0) {
                     // obtenemos el próximo trabajo de formateo
-                    let trabajoFormateo = cola_formateos.shift();
-                    vectorEstado[1] = reloj + ult_min_trab_c;
+                    // let trabajoFormateo = cola_formateos.shift();
+                    // vectorEstado[1] = reloj + ult_min_trab_c;
+                    console.log("cola formateo t2", arr_cola_formateos);
                 }
                 // en caso que haya alguna PC en cola
                 else if (cola > 0) {
@@ -643,6 +652,8 @@ const generacionColas = (
             // Caso 4 de 4: fin formateo
             else {
                 // Validamos cual es el tecnico que tomará el trabajo
+                estado_t1 = "Ocupado";
+                estado_t2 = "Ocupado";
                 if (estado_t1 === "Libre" && estado_t2 === "Libre") {
                     let rnd_tec = truncateDecimals(Math.random(), 2);
                     if (rnd_tec < 0.5) {
@@ -714,6 +725,16 @@ const generacionColas = (
                 // En caso que los dos tecnicos esten ocupados, incrementamos la cola de formateos.
                 else {
                     cola_formateos++;
+                    let trab = {
+                        indice: indice_menor_tiempo_fin_formateo,
+                        estado: vectorEstado[indice_menor_tiempo_fin_formateo - 2],
+                        tiempo: vectorEstado[indice_menor_tiempo_fin_formateo],
+                    }
+                    for (let i = 0; i < arr_cola_formateos.length; i++) {
+                        if (arr_cola_formateos[i].indice !== trab.indice) {
+                            arr_cola_formateos[i] = trab;
+                        }
+                    }
                 }
             }
         }
