@@ -331,7 +331,8 @@ const generacionColas = (
     let cola_formateos = 0;
     let acum_tiempo_permanencia = 0;
     let acum_pcs = 0;
-    let acum_tiempo_ocupacion = 0;
+    let acum_tiempo_ocupacion_t1 = 0;
+    let acum_tiempo_ocupacion_t2 = 0;
     let pc = {
         estado_pc: "-",
         tiempo_llegada: "-",
@@ -343,7 +344,8 @@ const generacionColas = (
     let vectorReloj = []; //se usa al ultimo (esta explicado). Para el desdeHasta del reloj.
     let acum_llegadas_pc = 0; //para Estadistica
     let porc_equipos_no_atendidos = 0; //para Estadistica
-    let porc_ocup_tecnicos = 0; //para Estadistica
+    let porc_ocup_tecnico1 = 0; //para Estadistica
+    let porc_ocup_tecnico2 = 0; //para Estadistica
  
     // contador para saber la cantidad de objetos PC que se crearon
     let cantidad_pcs = 0;
@@ -505,6 +507,9 @@ const generacionColas = (
                         reloj,
                         prim_min_trab_c
                     );
+                    
+                    //Sumamos el tiempo acumulado que estuvo ocupado con la pc anterior
+                    acum_tiempo_ocupacion_t1 += truncateDecimals(reloj - tiempo_ocupacion_t1, 2);
 
                     // Ocupamos el tecnico 1
                     [fin_tarea_t1, estado_t1, tiempo_ocupacion_t1] =
@@ -514,6 +519,8 @@ const generacionColas = (
                             trabajo,
                             ult_min_trab_c
                         );
+                    
+                    
 
                     // En caso que sea un trabajo de formateo, no hace falta el tiempo fin tarea
                     if (trabajo.letra === "C") {
@@ -522,13 +529,11 @@ const generacionColas = (
 
                     // Restamos 1 a la cola
                     cola--;
+                    
                 }
                 // en caso que no haya ninguna PC en cola
                 else {
-                    acum_tiempo_ocupacion += truncateDecimals(
-                        reloj - tiempo_ocupacion_t1,
-                        2
-                    );
+                    acum_tiempo_ocupacion_t1 += truncateDecimals(reloj - tiempo_ocupacion_t1, 2);
 
                     // No generamos ningun trabajo, ni ningun fin de tarea y el tecnico se libera
                     rnd_trabajo = "-";
@@ -573,6 +578,9 @@ const generacionColas = (
                         prim_min_trab_c
                     );
 
+                    //Sumamos el tiempo acumulado que estuvo ocupado con la pc anterior
+                    acum_tiempo_ocupacion_t2 += truncateDecimals(reloj - tiempo_ocupacion_t2, 2);
+
                     // Ocupamos el tecnico 2
                     [fin_tarea_t2, estado_t2, tiempo_ocupacion_t2] =
                         ocuparTecnico(
@@ -589,10 +597,11 @@ const generacionColas = (
 
                     // Restamos 1 a la cola
                     cola--;
+
                 }
                 // en caso que no haya ninguna PC en cola
                 else {
-                    acum_tiempo_ocupacion += truncateDecimals(
+                    acum_tiempo_ocupacion_t2 += truncateDecimals(
                         reloj - tiempo_ocupacion_t2,
                         2
                     );
@@ -636,7 +645,8 @@ const generacionColas = (
         vectorEstado[17] = cola_formateos;
         vectorEstado[18] = acum_tiempo_permanencia;
         vectorEstado[19] = acum_pcs;
-        vectorEstado[20] = acum_tiempo_ocupacion;
+        vectorEstado[20] = acum_tiempo_ocupacion_t1;
+        vectorEstado[21] = acum_tiempo_ocupacion_t2;
 
         // En caso que se haya creado una PC, la agregamos al final del vectorEstado
         if (existe_pc) {
@@ -655,8 +665,6 @@ const generacionColas = (
     }
 
     // agregar ultima fila en caso que 'hasta' sea menor que la cantidad de filas
-    console.log(vectorReloj[vectorReloj.length-1])
-    console.log(reloj);
     if (hasta < vectorReloj[vectorReloj.length-1]) {
         filas.push([...vectorEstado]);
     }
@@ -672,9 +680,13 @@ const generacionColas = (
         "Porcentaje de equipos que no pueden ser atendidos en el laboratorio: " + truncateDecimals(porc_equipos_no_atendidos, 2) * 100 + "%";
 
     //Porcentaje de ocupación de los técnicos del laboratorio
-    porc_ocup_tecnicos = (acum_tiempo_ocupacion / reloj);
+    porc_ocup_tecnico1 = (acum_tiempo_ocupacion_t1 / reloj);
+    porc_ocup_tecnico2 = (acum_tiempo_ocupacion_t2 / reloj);
     lblPorcOcupTecnico.innerHTML =
-        "Porcentaje de ocupación de los técnicos: " + truncateDecimals(porc_ocup_tecnicos, 2) * 100 + "%";
+        "Porcentaje de ocupación de los técnicos: " + "Tecnico1: " + truncateDecimals(porc_ocup_tecnico1, 2) * 100 + "% - " +
+                                                    "Tecnico2: " + truncateDecimals(porc_ocup_tecnico2, 2) * 100 + "%"
+    
+    //console.log(acum_tiempo_ocupacion, reloj);
 
 
     return [filas, cantidad_pcs];
@@ -910,8 +922,14 @@ const simular = () => {
                     suppressMenu: true,
                 },
                 {
-                    field: "acum_tiempo_ocupacion",
-                    headerName: "Tiempo acumulado ocupación técnicos",
+                    field: "acum_tiempo_ocupacion_t1",
+                    headerName: "Tiempo acumulado ocupación técnico 1",
+                    maxWidth: 110,
+                    suppressMenu: true,
+                },
+                {
+                    field: "acum_tiempo_ocupacion_t2",
+                    headerName: "Tiempo acumulado ocupación técnico 2",
                     maxWidth: 110,
                     suppressMenu: true,
                 },
@@ -1005,7 +1023,8 @@ const crearFila = (vectorEstado) => {
         cola_formateos: vectorEstado[17],
         acum_tiempo_permanencia: vectorEstado[18],
         acum_pcs: vectorEstado[19],
-        acum_tiempo_ocupacion: vectorEstado[20],
+        acum_tiempo_ocupacion_t1: vectorEstado[20],
+        acum_tiempo_ocupacion_t2: vectorEstado[21],
     };
 
     return fila;
