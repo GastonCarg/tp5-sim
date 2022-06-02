@@ -684,6 +684,18 @@ const generacionColas = (
                         vectorEstado[j + 1] = "////";
                         vectorEstado[j + 2] = "////";
                     }
+
+                    else if (vectorEstado[j] == "Esperando reparacion" && evento == "Fin tarea T2") {
+                        vectorEstado[j] = "Siendo reparada x tec2";
+                        vectorEstado[j + 1] = reloj;
+                        vectorEstado[j + 2] = "-";
+                    }
+
+                    else if (vectorEstado[j] == "Esperando reparación" && evento == "Fin tarea T1") {
+                        vectorEstado[j] = "Siendo reparada x tec1";
+                        vectorEstado[j + 1] = reloj;
+                        vectorEstado[j + 2] = "-";
+                    }
                 }
             }
         }
