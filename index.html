@@ -93,13 +93,13 @@
                     id="time-sim"
                     style="margin: 0.5em"
                     type="number"
-                    value="20"
+                    value="2000"
                 />
 
                 <label style="display: block; margin-right: 60px" for="n"
                     >Cantidad de iteraciones a simular (N):</label
                 >
-                <input id="n" style="margin: 0.5em" type="number" value="10" />
+                <input id="n" style="margin: 0.5em" type="number" value="20" />
 
                 <hr />
                 <table>
@@ -327,7 +327,9 @@
                 <hr />
                 <p><b> Filas a mostrar </b></p>
 
-                <label style="display: block" for="sim-desde">Desde (minutos):</label>
+                <label style="display: block" for="sim-desde"
+                    >Desde (minutos):</label
+                >
                 <input
                     id="sim-desde"
                     style="margin: 0.5em"
@@ -335,7 +337,9 @@
                     value="0"
                 />
 
-                <label style="display: block" for="sim-hasta">Hasta (minutos):</label>
+                <label style="display: block" for="sim-hasta"
+                    >Hasta (minutos):</label
+                >
                 <input
                     id="sim-hasta"
                     style="margin: 0.5em"
@@ -355,25 +359,23 @@
             </div>
         </div>
 
-        <div class="row justify-content-center">
-            <div class="col-11">
-                <div
-                    id="gridVariable"
-                    class="ag-theme-alpine my-2"
-                    style="height: 500px; width: 100%"
-                ></div>
-                <button
-                    hidden="hidden"
-                    id="btnExportToExcelRandVar"
-                    class="btn btn-info"
-                    style="margin-bottom: 5px; font-weight: bold"
-                >
-                    Exportar a Excel
-                </button>
-                <label id="promPermanencia" style="display: block"></label>
-                <label id="porcSinAtender" style="display: block"></label>
-                <label id="porcOcup" style="display: block"></label>
-            </div>
+        <div class="container-fluid">
+            <div
+                id="gridVariable"
+                class="ag-theme-alpine my-2"
+                style="height: 700px; width: 100%"
+            ></div>
+            <button
+                hidden="hidden"
+                id="btnExportToExcelRandVar"
+                class="btn btn-info"
+                style="margin-bottom: 5px; font-weight: bold"
+            >
+                Exportar a Excel
+            </button>
+            <label id="promPermanencia" style="display: block"></label>
+            <label id="porcSinAtender" style="display: block"></label>
+            <label id="porcOcup" style="display: block"></label>
         </div>
 
         <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>
