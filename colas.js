@@ -251,7 +251,7 @@ const generarPC = (nroTecnico, trabajo, reloj, fin_tarea, ult_min_trab_c) => {
             return {
                 estado_pc: `Etapa inicial formateo T${nroTecnico}`,
                 tiempo_llegada: reloj,
-                tiempo_fin_formateo: fin_tarea - ult_min_trab_c,
+                tiempo_fin_formateo: reloj + fin_tarea - ult_min_trab_c,
             };
         } else {
             return {
