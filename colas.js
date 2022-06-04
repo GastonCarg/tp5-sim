@@ -335,6 +335,7 @@ const generacionColas = (
     let porc_equipos_no_atendidos = 0; //para Estadistica
     let porc_ocup_tecnico1 = 0; //para Estadistica
     let porc_ocup_tecnico2 = 0; //para Estadistica
+    let aux_pc = {};
 
     // contador para saber la cantidad de objetos PC que se crearon
     let cantidad_pcs = 0;
@@ -398,11 +399,20 @@ const generacionColas = (
                             evento === "Fin tarea T1")
                     ) {
                         if (trabajo.letra === "C") {
-                            evento === "Fin tarea T2"
-                                ? (vectorEstado[j] =
-                                      "Etapa inicial  formateo T2")
-                                : (vectorEstado[j] =
-                                      "Etapa inicial  formateo T1");
+                            console.log('Hola, deberia ser un trabajo de formateo en cola');
+                            if (evento === "Fin tarea T2") {
+                                vectorEstado[j] = "Etapa inicial formateo T2";
+                                vectorEstado[j + 2] = reloj + trabajo.tiempo - ult_min_trab_c;
+                            }
+                            else {
+                                vectorEstado[j] = "Etapa inicial formateo T1";
+                                vectorEstado[j + 2] = reloj + trabajo.tiempo - ult_min_trab_c;
+                            }
+                            // evento === "Fin tarea T2"
+                            //     ? (vectorEstado[j] =
+                            //           "Etapa inicial formateo T2")
+                            //     : (vectorEstado[j] =
+                            //           "Etapa inicial formateo T1");
                         } else {
                             evento === "Fin tarea T2"
                                 ? (vectorEstado[j] = "Siendo reparada T2")
@@ -417,16 +427,16 @@ const generacionColas = (
                             evento === "Fin tarea T2")
                     ) {
                         vectorEstado[j] = "En formateo automático";
-                    } else if (
-                        vectorEstado[j] === "En formateo automático" &&
-                        evento === "Fin tarea T1"
-                    ) {
-                        vectorEstado[j] = "Etapa final formateo T1";
-                    } else if (
-                        vectorEstado[j] === "En formateo automático" &&
-                        evento === "Fin tarea T2"
-                    ) {
-                        vectorEstado[j] = "Etapa final formateo T2";
+                    // } else if (
+                    //     vectorEstado[j] === "En formateo automático" &&
+                    //     evento === "Fin tarea T1"
+                    // ) {
+                    //     vectorEstado[j] = "Etapa final formateo T1";
+                    // } else if (
+                    //     vectorEstado[j] === "En formateo automático" &&
+                    //     evento === "Fin tarea T2"
+                    // ) {
+                    //     vectorEstado[j] = "Etapa final formateo T2";
                     } else if (
                         (vectorEstado[j] === "Etapa final formateo T1" &&
                             evento === "Fin tarea T1") ||
@@ -464,7 +474,7 @@ const generacionColas = (
                     evento = "Fin formateo automático";
                     reloj = miPc.tiempo_fin_formateo;
                     vectorEstado[miPc.indice + 2] = "-";
-
+                    aux_pc = miPc;
                     if (
                         (estado_t1 === "Libre" && estado_t2 === "Libre") ||
                         (estado_t1 === "Libre" && estado_t2 === "Ocupado")
@@ -474,6 +484,17 @@ const generacionColas = (
                                 reloj,
                                 ult_min_trab_c
                             );
+
+                            rnd_llegada = "-";
+                            llegada = "-";
+                            rnd_trabajo = "-";
+                            trabajo = {
+                                prob: "-",
+                                tiempo: "-",
+                                nombre: "-",
+                                letra: "-",
+                            };
+                            vectorEstado[miPc.indice] = "Etapa final formateo T1";
 
                         cola_formateos > 0 && cola_formateos--;
                     } else if (
@@ -485,6 +506,17 @@ const generacionColas = (
                                 reloj,
                                 ult_min_trab_c
                             );
+
+                            rnd_llegada = "-";
+                            llegada = "-";
+                            rnd_trabajo = "-";
+                            trabajo = {
+                                prob: "-",
+                                tiempo: "-",
+                                nombre: "-",
+                                letra: "-",
+                            };
+                            vectorEstado[miPc.indice] = "Etapa final formateo T2";
 
                         cola > 0 && cola--;
                     }
@@ -500,6 +532,7 @@ const generacionColas = (
                         };
                         rnd_fin_tarea = "-";
                         fin_tarea = "-";
+                        vectorEstado[miPc.indice] = "Esperando fin reparación";
 
                         cola_formateos++;
                     }
@@ -661,14 +694,15 @@ const generacionColas = (
                                     reloj,
                                     ult_min_trab_c
                                 );
+                                vectorEstado[aux_pc.indice] = "Etapa final formateo T1";
                         } else {
                             [fin_tarea_t2, estado_t2, tiempo_ocupacion_t2] =
                                 ocuparTecnicoEtapaFinalFormateo(
                                     reloj,
                                     ult_min_trab_c
                                 );
+                                vectorEstado[aux_pc.indice] = "Etapa final formateo T2";
                         }
-
                         cola_formateos--;
                     }
 
