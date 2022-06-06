@@ -350,7 +350,6 @@ const generacionColas = (
     let pc_formateo = new Pc(null, "-", "-", "-", "-");
     let cantidad_pcs = 0;
     let pcs_formateo = [];
-    let pcs = [];
     let filas = [];
 
     // recorrer por la cantidad de filas
@@ -401,8 +400,6 @@ const generacionColas = (
 
         // Evento 3 en adelante: resto de la simulacion
         else {
-            pcs_formateo = [];
-
             pc_formateo = obtenerPCFormateo(pcs_formateo);
 
             // Caso 1 de 3: se da un fin formateo automatico
@@ -668,6 +665,7 @@ const generacionColas = (
                 trabajo = new Trabajo("-", "-", "-", "-");
             }
 
+            pcs_formateo = [];
             // Actualizacion de estados de PCs
             for (let j = 22; j < vectorEstado.length; j += 4) {
                 let aux = new Pc(
@@ -683,8 +681,6 @@ const generacionColas = (
                     vectorEstado[j + 3] !== "////"
                 ) {
                     pcs_formateo.push(aux);
-                } else {
-                    pcs.push(aux);
                 }
 
                 // Caso A: PC esperando reparacion + fin tarea => siendo reparada
