@@ -403,97 +403,6 @@ const generacionColas = (
         else {
             pcs_formateo = [];
 
-            // Actualizacion de estados de PCs
-            for (let j = 22; j < vectorEstado.length; j += 4) {
-                let aux = new Pc(
-                    j,
-                    vectorEstado[j],
-                    vectorEstado[j + 1],
-                    vectorEstado[j + 2],
-                    vectorEstado[j + 3]
-                );
-
-                if (
-                    vectorEstado[j + 3] !== "-" &&
-                    vectorEstado[j + 3] !== "////"
-                ) {
-                    pcs_formateo.push(aux);
-                } else {
-                    pcs.push(aux);
-                }
-
-                // Caso A: PC esperando reparacion + fin tarea => siendo reparada
-                if (
-                    (vectorEstado[j] === "ER" && evento === "Fin tarea T2") ||
-                    (vectorEstado[j] === "ER" && evento === "Fin tarea T1")
-                ) {
-                    evento === "Fin tarea T2"
-                        ? (vectorEstado[j] = "SR T2")
-                        : (vectorEstado[j] = "SR T1");
-
-                    vectorEstado[j + 3] = "-";
-                }
-
-                // Caso B: PC esperando etapa inicial formateo + fin tarea => etapa inicial formateo
-                else if (
-                    (vectorEstado[j] === "EEIF" && evento === "Fin tarea T2") ||
-                    (vectorEstado[j] === "EEIF" && evento === "Fin tarea T1")
-                ) {
-                    evento === "Fin tarea T2"
-                        ? (vectorEstado[j] = "EIF T2")
-                        : (vectorEstado[j] = "EIF T1");
-
-                    vectorEstado[j + 3] = truncateDecimals(
-                        reloj + trabajo.tiempo - ult_min_trab_c,
-                        2
-                    );
-                }
-
-                // Caso C: PC esperando etapa final formateo + fin tarea => etapa final formateo
-                else if (
-                    (vectorEstado[j] === "EEFF" && evento === "Fin tarea T2") ||
-                    (vectorEstado[j] === "EEFF" && evento === "Fin tarea T1")
-                ) {
-                    evento === "Fin tarea T2"
-                        ? (vectorEstado[j] = "EFF T2")
-                        : (vectorEstado[j] = "EFF T1");
-
-                    vectorEstado[j + 3] = "-";
-                }
-
-                // Caso D: PC etapa inicial formateo + fin tarea => formateo automatico
-                else if (
-                    (vectorEstado[j] === "EIF T1" &&
-                        evento === "Fin tarea T1") ||
-                    (vectorEstado[j] === "EIF T2" && evento === "Fin tarea T2")
-                ) {
-                    vectorEstado[j] = "FA";
-                }
-
-                // Caso E: (PC etapa final formateo ó PC siendo reparada) + fin tarea => destruccion
-                else if (
-                    (vectorEstado[j] === "EFF T1" &&
-                        evento === "Fin tarea T1") ||
-                    (vectorEstado[j] == "EFF T2" &&
-                        evento === "Fin tarea T2") ||
-                    (vectorEstado[j] === "SR T1" &&
-                        evento === "Fin tarea T1") ||
-                    (vectorEstado[j] == "SR T2" && evento === "Fin tarea T2")
-                ) {
-                    acum_tiempo_permanencia += truncateDecimals(
-                        reloj - vectorEstado[j + 1],
-                        2
-                    );
-
-                    total_pc_antendidas++;
-
-                    vectorEstado[j] = "////";
-                    vectorEstado[j + 1] = "////";
-                    vectorEstado[j + 2] = "////";
-                    vectorEstado[j + 3] = "////";
-                }
-            }
-
             pc_formateo = obtenerPCFormateo(pcs_formateo);
 
             // Caso 1 de 3: se da un fin formateo automatico
@@ -757,6 +666,97 @@ const generacionColas = (
                 llegada = "-";
                 rnd_trabajo = "-";
                 trabajo = new Trabajo("-", "-", "-", "-");
+            }
+
+            // Actualizacion de estados de PCs
+            for (let j = 22; j < vectorEstado.length; j += 4) {
+                let aux = new Pc(
+                    j,
+                    vectorEstado[j],
+                    vectorEstado[j + 1],
+                    vectorEstado[j + 2],
+                    vectorEstado[j + 3]
+                );
+
+                if (
+                    vectorEstado[j + 3] !== "-" &&
+                    vectorEstado[j + 3] !== "////"
+                ) {
+                    pcs_formateo.push(aux);
+                } else {
+                    pcs.push(aux);
+                }
+
+                // Caso A: PC esperando reparacion + fin tarea => siendo reparada
+                if (
+                    (vectorEstado[j] === "ER" && evento === "Fin tarea T2") ||
+                    (vectorEstado[j] === "ER" && evento === "Fin tarea T1")
+                ) {
+                    evento === "Fin tarea T2"
+                        ? (vectorEstado[j] = "SR T2")
+                        : (vectorEstado[j] = "SR T1");
+
+                    vectorEstado[j + 3] = "-";
+                }
+
+                // Caso B: PC esperando etapa inicial formateo + fin tarea => etapa inicial formateo
+                else if (
+                    (vectorEstado[j] === "EEIF" && evento === "Fin tarea T2") ||
+                    (vectorEstado[j] === "EEIF" && evento === "Fin tarea T1")
+                ) {
+                    evento === "Fin tarea T2"
+                        ? (vectorEstado[j] = "EIF T2")
+                        : (vectorEstado[j] = "EIF T1");
+
+                    vectorEstado[j + 3] = truncateDecimals(
+                        reloj + trabajo.tiempo - ult_min_trab_c,
+                        2
+                    );
+                }
+
+                // Caso C: PC esperando etapa final formateo + fin tarea => etapa final formateo
+                else if (
+                    (vectorEstado[j] === "EEFF" && evento === "Fin tarea T2") ||
+                    (vectorEstado[j] === "EEFF" && evento === "Fin tarea T1")
+                ) {
+                    evento === "Fin tarea T2"
+                        ? (vectorEstado[j] = "EFF T2")
+                        : (vectorEstado[j] = "EFF T1");
+
+                    vectorEstado[j + 3] = "-";
+                }
+
+                // Caso D: PC etapa inicial formateo + fin tarea => formateo automatico
+                else if (
+                    (vectorEstado[j] === "EIF T1" &&
+                        evento === "Fin tarea T1") ||
+                    (vectorEstado[j] === "EIF T2" && evento === "Fin tarea T2")
+                ) {
+                    vectorEstado[j] = "FA";
+                }
+
+                // Caso E: (PC etapa final formateo ó PC siendo reparada) + fin tarea => destruccion
+                else if (
+                    (vectorEstado[j] === "EFF T1" &&
+                        evento === "Fin tarea T1") ||
+                    (vectorEstado[j] == "EFF T2" &&
+                        evento === "Fin tarea T2") ||
+                    (vectorEstado[j] === "SR T1" &&
+                        evento === "Fin tarea T1") ||
+                    (vectorEstado[j] == "SR T2" && evento === "Fin tarea T2")
+                ) {
+                    acum_tiempo_permanencia += truncateDecimals(
+                        reloj - vectorEstado[j + 1],
+                        2
+                    );
+
+                    total_pc_antendidas++;
+
+                    vectorEstado[j] = "////";
+                    vectorEstado[j + 1] = "////";
+                    vectorEstado[j + 2] = "////";
+                    vectorEstado[j + 3] = "////";
+                }
             }
         }
 
