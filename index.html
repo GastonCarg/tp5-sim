@@ -365,17 +365,92 @@
                 class="ag-theme-alpine my-2"
                 style="height: 700px; width: 100%"
             ></div>
-            <button
-                hidden="hidden"
-                id="btnExportToExcelRandVar"
-                class="btn btn-info"
-                style="margin-bottom: 5px; font-weight: bold"
-            >
-                Exportar a Excel
-            </button>
-            <label id="promPermanencia" style="display: block"></label>
-            <label id="porcSinAtender" style="display: block"></label>
-            <label id="porcOcup" style="display: block"></label>
+            <div id="divInfo" class="d-flex my-5" style="visibility: hidden">
+                <div class="me-4">
+                    <table>
+                        <tr>
+                            <th>Eventos</th>
+                            <th>Distribución</th>
+                        </tr>
+                        <tr>
+                            <td>Llegada PC</td>
+                            <td>U(30';90')</td>
+                        </tr>
+                        <tr>
+                            <td>Fin tarea T1</td>
+                            <td id="tdDistFinTarea" rowspan="2"></td>
+                        </tr>
+                        <tr>
+                            <td>Fin tarea T2</td>
+                        </tr>
+                        <tr>
+                            <td>Fin formateo automático</td>
+                            <td>Constante</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="me-4">
+                    <table>
+                        <tr>
+                            <th>Objetos</th>
+                            <th>Tipo</th>
+                            <th>Estados</th>
+                        </tr>
+                        <tr>
+                            <td rowspan="3">Técnicos</td>
+                            <td rowspan="3">Permanente</td>
+                        </tr>
+                        <tr>
+                            <td>Libre</td>
+                        </tr>
+                        <tr>
+                            <td>Ocupado</td>
+                        </tr>
+                        <tr>
+                            <td rowspan="6">Computadoras</td>
+                            <td rowspan="6">Temporal</td>
+                        </tr>
+                        <tr>
+                            <td>Siendo reparada (SR)</td>
+                        </tr>
+                        <tr>
+                            <td>Esperando reparación (ER)</td>
+                        </tr>
+                        <tr>
+                            <td>Etapa inicial formateo (EIF)</td>
+                        </tr>
+                        <tr>
+                            <td>Etapa final formateo (EFF)</td>
+                        </tr>
+                        <tr>
+                            <td>Esperando fin tarea (EFT)</td>
+                        </tr>
+                    </table>
+                </div>
+                <div>
+                    <table>
+                        <tr>
+                            <th colspan="2">Resultados estadísticos</th>
+                        </tr>
+                        <tr>
+                            <td>Promedio de permanencia de PC:</td>
+                            <td id="tdPromPermanenciaPC"></td>
+                        </tr>
+                        <tr>
+                            <td>Porcentaje de PCs sin atender:</td>
+                            <td id="tdPorcPCsSinAtender"></td>
+                        </tr>
+                        <tr>
+                            <td>Porcentaje de ocupación T1:</td>
+                            <td id="tdPorcOcupT1"></td>
+                        </tr>
+                        <tr>
+                            <td>Porcentaje de ocupación T2:</td>
+                            <td id="tdPorcOcupT2"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
         </div>
 
         <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>

@@ -9,3 +9,20 @@
     display: flex;
     justify-content: center;
 }
+
+#divInfo tr,
+#divInfo td,
+#divInfo th {
+    padding: 0 15px;
+}
+
+#divInfo th {
+    text-align: center;
+}
+
+#divInfo table,
+#divInfo tr,
+#divInfo td,
+#divInfo th {
+    border: 1px solid #ccc;
+}
