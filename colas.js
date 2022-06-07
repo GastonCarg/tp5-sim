@@ -284,20 +284,26 @@ const generarPC = (nroTecnico, trabajo, reloj, fin_tarea, ult_min_trab_c) => {
         } else {
             return new Pc(null, `SR T${nroTecnico}`, reloj, trabajo.abrev, "-");
         }
-    } else if (trabajo.abrev === "FD") {
-        return new Pc(null, "EEIF", reloj, trabajo.abrev, "-");
-    } else {
-        return new Pc(null, "ER", reloj, trabajo.abrev, "-");
     }
+    return new Pc(null, "ER", reloj, trabajo.abrev, "-");
 };
 
-const obtenerPCFormateo = (pcs_formateo) => {
+const obtenerPCFormateoDeColaFormateo = (pcs_formateo) => {
     // Ordenar el arreglo de PCs de formateo para obtener la PC que se ocupa primero
     pcs_formateo.sort((pc1, pc2) => {
         return pc1.tiempo_fin_formateo - pc2.tiempo_fin_formateo;
     });
 
     return pcs_formateo.shift();
+};
+
+const obtenerPCDeCola = (pcs) => {
+    // Ordenar el arreglo de PCs para obtener la PC que se ocupa primero
+    pcs.sort((pc1, pc2) => {
+        return pc1.llegada - pc2.llegada;
+    });
+
+    return pcs.shift();
 };
 
 const generacionColas = (
@@ -350,6 +356,7 @@ const generacionColas = (
     let pc_formateo = new Pc(null, "-", "-", "-", "-");
     let cantidad_pcs = 0;
     let pcs_formateo = [];
+    let pcs = [];
     let filas = [];
 
     // recorrer por la cantidad de filas
@@ -400,7 +407,7 @@ const generacionColas = (
 
         // Evento 3 en adelante: resto de la simulacion
         else {
-            pc_formateo = obtenerPCFormateo(pcs_formateo);
+            pc_formateo = obtenerPCFormateoDeColaFormateo(pcs_formateo);
 
             // Caso 1 de 3: se da un fin formateo automatico
             if (
@@ -473,13 +480,6 @@ const generacionColas = (
                 // Generamos el proximo trabajo
                 [rnd_trabajo, trabajo] = generarProximoTrabajo(trabajos);
 
-                // Generamos el proximo fin de tarea
-                [rnd_fin_tarea, fin_tarea] = generarProximoFinTarea(
-                    distrib_trab_a,
-                    distrib_trab_b,
-                    trabajo
-                );
-
                 if (estado_t1 === "Ocupado" && estado_t2 === "Ocupado") {
                     pc = generarPC(
                         0,
@@ -489,18 +489,24 @@ const generacionColas = (
                         ult_min_trab_c
                     );
 
-                    if (trabajo.abrev === "FD") {
-                        cola_formateos++;
+                    // en el caso que haya 3 equipos en cola, se agrega 1 equipo al acum_pcs
+                    // (son las PCs que no pueden ser atendidas en este laboratorio)
+                    if (cola === 3) {
+                        acum_pcs++;
                     } else {
-                        // en el caso que haya 3 equipos en cola, se agrega 1 equipo al acum_pcs
-                        // (son las PCs que no pueden ser atendidas en este laboratorio)
-                        if (cola === 3) {
-                            acum_pcs++;
-                        } else {
-                            cola++;
-                        }
+                        cola++;
                     }
+
+                    rnd_fin_tarea = "-";
+                    fin_tarea = "-";
                 } else {
+                    // Generamos el proximo fin de tarea
+                    [rnd_fin_tarea, fin_tarea] = generarProximoFinTarea(
+                        distrib_trab_a,
+                        distrib_trab_b,
+                        trabajo
+                    );
+
                     let estaT1Libre =
                         (estado_t1 === "Libre" && estado_t2 === "Libre") ||
                         (estado_t1 === "Libre" && estado_t2 === "Ocupado");
@@ -599,10 +605,10 @@ const generacionColas = (
                             (vectorEstado[pc_formateo.indice] = "EFF T2");
                     }
 
-                    cola_formateos--;
-
                     rnd_fin_tarea = "-";
                     fin_tarea = "-";
+
+                    cola_formateos--;
                 }
 
                 // Caso 3.2: existe alguna PC en cola
@@ -666,6 +672,7 @@ const generacionColas = (
             }
 
             pcs_formateo = [];
+            pcs = [];
             // Actualizacion de estados de PCs
             for (let j = 22; j < vectorEstado.length; j += 4) {
                 let aux = new Pc(
@@ -676,41 +683,36 @@ const generacionColas = (
                     vectorEstado[j + 3]
                 );
 
-                if (
-                    vectorEstado[j + 3] !== "-" &&
-                    vectorEstado[j + 3] !== "////"
-                ) {
+                if (vectorEstado[j + 2] === "FD") {
                     pcs_formateo.push(aux);
+                } else {
+                    pcs.push(aux);
                 }
 
-                // Caso A: PC esperando reparacion + fin tarea => siendo reparada
+                // Caso A: PC esperando reparacion + fin tarea => etapa inicial formateo ó siendo reparada
                 if (
                     (vectorEstado[j] === "ER" && evento === "Fin tarea T2") ||
                     (vectorEstado[j] === "ER" && evento === "Fin tarea T1")
                 ) {
-                    evento === "Fin tarea T2"
-                        ? (vectorEstado[j] = "SR T2")
-                        : (vectorEstado[j] = "SR T1");
+                    if (vectorEstado[j + 2] === "FD") {
+                        evento === "Fin tarea T2"
+                            ? (vectorEstado[j] = "EIF T2")
+                            : (vectorEstado[j] = "EIF T1");
 
-                    vectorEstado[j + 3] = "-";
+                        vectorEstado[j + 3] = truncateDecimals(
+                            reloj + trabajo.tiempo - ult_min_trab_c,
+                            2
+                        );
+                    } else {
+                        evento === "Fin tarea T2"
+                            ? (vectorEstado[j] = "SR T2")
+                            : (vectorEstado[j] = "SR T1");
+
+                        vectorEstado[j + 3] = "-";
+                    }
                 }
 
-                // Caso B: PC esperando etapa inicial formateo + fin tarea => etapa inicial formateo
-                else if (
-                    (vectorEstado[j] === "EEIF" && evento === "Fin tarea T2") ||
-                    (vectorEstado[j] === "EEIF" && evento === "Fin tarea T1")
-                ) {
-                    evento === "Fin tarea T2"
-                        ? (vectorEstado[j] = "EIF T2")
-                        : (vectorEstado[j] = "EIF T1");
-
-                    vectorEstado[j + 3] = truncateDecimals(
-                        reloj + trabajo.tiempo - ult_min_trab_c,
-                        2
-                    );
-                }
-
-                // Caso C: PC esperando etapa final formateo + fin tarea => etapa final formateo
+                // Caso B: PC esperando etapa final formateo + fin tarea => etapa final formateo
                 else if (
                     (vectorEstado[j] === "EEFF" && evento === "Fin tarea T2") ||
                     (vectorEstado[j] === "EEFF" && evento === "Fin tarea T1")
@@ -722,7 +724,7 @@ const generacionColas = (
                     vectorEstado[j + 3] = "-";
                 }
 
-                // Caso D: PC etapa inicial formateo + fin tarea => formateo automatico
+                // Caso C: PC etapa inicial formateo + fin tarea => formateo automatico
                 else if (
                     (vectorEstado[j] === "EIF T1" &&
                         evento === "Fin tarea T1") ||
@@ -731,7 +733,7 @@ const generacionColas = (
                     vectorEstado[j] = "FA";
                 }
 
-                // Caso E: (PC etapa final formateo ó PC siendo reparada) + fin tarea => destruccion
+                // Caso D: (PC etapa final formateo ó PC siendo reparada) + fin tarea => destruccion
                 else if (
                     (vectorEstado[j] === "EFF T1" &&
                         evento === "Fin tarea T1") ||
