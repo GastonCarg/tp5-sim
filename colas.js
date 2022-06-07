@@ -618,7 +618,7 @@ const generacionColas = (
                         [fin_tarea_t1, estado_t1, tiempo_ocupacion_t1] =
                             ocuparTecnico(
                                 reloj,
-                                fin_tarea,
+                                pc.tiempo_trabajo,
                                 trabajo,
                                 ult_min_trab_c
                             );
@@ -626,7 +626,7 @@ const generacionColas = (
                         [fin_tarea_t2, estado_t2, tiempo_ocupacion_t2] =
                             ocuparTecnico(
                                 reloj,
-                                fin_tarea,
+                                pc.tiempo_trabajo,
                                 trabajo,
                                 ult_min_trab_c
                             );
