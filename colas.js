@@ -15,12 +15,14 @@ class Pc {
         estado_pc,
         tiempo_llegada,
         trabajo,
+        tiempo_trabajo,
         tiempo_fin_formateo
     ) {
         this.indice = indice;
         this.estado_pc = estado_pc;
         this.tiempo_llegada = tiempo_llegada;
         this.trabajo = trabajo;
+        this.tiempo_trabajo = tiempo_trabajo;
         this.tiempo_fin_formateo = tiempo_fin_formateo;
     }
 }
@@ -279,13 +281,21 @@ const generarPC = (nroTecnico, trabajo, reloj, fin_tarea, ult_min_trab_c) => {
                 `EIF T${nroTecnico}`,
                 reloj,
                 trabajo.abrev,
+                fin_tarea,
                 truncateDecimals(reloj + fin_tarea - ult_min_trab_c, 2)
             );
         } else {
-            return new Pc(null, `SR T${nroTecnico}`, reloj, trabajo.abrev, "-");
+            return new Pc(
+                null,
+                `SR T${nroTecnico}`,
+                reloj,
+                trabajo.abrev,
+                fin_tarea,
+                "-"
+            );
         }
     }
-    return new Pc(null, "ER", reloj, trabajo.abrev, "-");
+    return new Pc(null, "ER", reloj, trabajo.abrev, fin_tarea, "-");
 };
 
 const obtenerPCFormateoDeColaFormateo = (pcs_formateo) => {
@@ -295,15 +305,6 @@ const obtenerPCFormateoDeColaFormateo = (pcs_formateo) => {
     });
 
     return pcs_formateo.shift();
-};
-
-const obtenerPCDeCola = (pcs) => {
-    // Ordenar el arreglo de PCs para obtener la PC que se ocupa primero
-    pcs.sort((pc1, pc2) => {
-        return pc1.llegada - pc2.llegada;
-    });
-
-    return pcs.shift();
 };
 
 const generacionColas = (
@@ -341,7 +342,7 @@ const generacionColas = (
     let acum_pcs = 0;
     let acum_tiempo_ocupacion_t1 = 0;
     let acum_tiempo_ocupacion_t2 = 0;
-    let pc = new Pc(null, "-", "-", "-", "-");
+    let pc = new Pc(null, "-", "-", "-", "-", "-");
 
     // Variables para la parte de estadisticas
     let acum_llegadas_pc = 0;
@@ -353,10 +354,9 @@ const generacionColas = (
 
     // Varriables auxiliares
     let vectorReloj = [];
-    let pc_formateo = new Pc(null, "-", "-", "-", "-");
+    let pc_formateo = new Pc(null, "-", "-", "-", "-", "-");
     let cantidad_pcs = 0;
     let pcs_formateo = [];
-    let pcs = [];
     let filas = [];
 
     // recorrer por la cantidad de filas
@@ -421,7 +421,7 @@ const generacionColas = (
             ) {
                 evento = "Fin formateo automático";
                 reloj = pc_formateo.tiempo_fin_formateo;
-                vectorEstado[pc_formateo.indice + 3] = "-";
+                vectorEstado[pc_formateo.indice + 4] = "-";
 
                 if (estado_t1 === "Ocupado" && estado_t2 === "Ocupado") {
                     // estado se actualiza a esperando etapa fin formateo
@@ -480,6 +480,13 @@ const generacionColas = (
                 // Generamos el proximo trabajo
                 [rnd_trabajo, trabajo] = generarProximoTrabajo(trabajos);
 
+                // Generamos el proximo fin de tarea
+                [rnd_fin_tarea, fin_tarea] = generarProximoFinTarea(
+                    distrib_trab_a,
+                    distrib_trab_b,
+                    trabajo
+                );
+
                 if (estado_t1 === "Ocupado" && estado_t2 === "Ocupado") {
                     pc = generarPC(
                         0,
@@ -496,17 +503,7 @@ const generacionColas = (
                     } else {
                         cola++;
                     }
-
-                    rnd_fin_tarea = "-";
-                    fin_tarea = "-";
                 } else {
-                    // Generamos el proximo fin de tarea
-                    [rnd_fin_tarea, fin_tarea] = generarProximoFinTarea(
-                        distrib_trab_a,
-                        distrib_trab_b,
-                        trabajo
-                    );
-
                     let estaT1Libre =
                         (estado_t1 === "Libre" && estado_t2 === "Libre") ||
                         (estado_t1 === "Libre" && estado_t2 === "Ocupado");
@@ -605,9 +602,6 @@ const generacionColas = (
                             (vectorEstado[pc_formateo.indice] = "EFF T2");
                     }
 
-                    rnd_fin_tarea = "-";
-                    fin_tarea = "-";
-
                     cola_formateos--;
                 }
 
@@ -617,13 +611,6 @@ const generacionColas = (
                     trabajo = obtenerTrabajoPorAbreviacion(
                         pc.trabajo,
                         trabajos
-                    );
-
-                    // Generamos el proximo fin de tarea
-                    [rnd_fin_tarea, fin_tarea] = generarProximoFinTarea(
-                        distrib_trab_a,
-                        distrib_trab_b,
-                        trabajo
                     );
 
                     // Ocupamos al tecnico correspondiente
@@ -660,33 +647,30 @@ const generacionColas = (
                         estado_t2 = "Libre";
                         tiempo_ocupacion_t2 = "-";
                     }
-
-                    rnd_fin_tarea = "-";
-                    fin_tarea = "-";
                 }
 
                 rnd_llegada = "-";
                 llegada = "-";
                 rnd_trabajo = "-";
                 trabajo = new Trabajo("-", "-", "-", "-");
+                rnd_fin_tarea = "-";
+                fin_tarea = "-";
             }
 
             pcs_formateo = [];
-            pcs = [];
             // Actualizacion de estados de PCs
-            for (let j = 22; j < vectorEstado.length; j += 4) {
+            for (let j = 22; j < vectorEstado.length; j += 5) {
                 let aux = new Pc(
                     j,
                     vectorEstado[j],
                     vectorEstado[j + 1],
                     vectorEstado[j + 2],
-                    vectorEstado[j + 3]
+                    vectorEstado[j + 3],
+                    vectorEstado[j + 4]
                 );
 
                 if (vectorEstado[j + 2] === "FD") {
                     pcs_formateo.push(aux);
-                } else {
-                    pcs.push(aux);
                 }
 
                 // Caso A: PC esperando reparacion + fin tarea => etapa inicial formateo ó siendo reparada
@@ -699,7 +683,7 @@ const generacionColas = (
                             ? (vectorEstado[j] = "EIF T2")
                             : (vectorEstado[j] = "EIF T1");
 
-                        vectorEstado[j + 3] = truncateDecimals(
+                        vectorEstado[j + 4] = truncateDecimals(
                             reloj + trabajo.tiempo - ult_min_trab_c,
                             2
                         );
@@ -708,7 +692,7 @@ const generacionColas = (
                             ? (vectorEstado[j] = "SR T2")
                             : (vectorEstado[j] = "SR T1");
 
-                        vectorEstado[j + 3] = "-";
+                        vectorEstado[j + 4] = "-";
                     }
                 }
 
@@ -721,7 +705,7 @@ const generacionColas = (
                         ? (vectorEstado[j] = "EFF T2")
                         : (vectorEstado[j] = "EFF T1");
 
-                    vectorEstado[j + 3] = "-";
+                    vectorEstado[j + 4] = "-";
                 }
 
                 // Caso C: PC etapa inicial formateo + fin tarea => formateo automatico
@@ -754,6 +738,7 @@ const generacionColas = (
                     vectorEstado[j + 1] = "////";
                     vectorEstado[j + 2] = "////";
                     vectorEstado[j + 3] = "////";
+                    vectorEstado[j + 4] = "////";
                 }
             }
         }
@@ -787,6 +772,7 @@ const generacionColas = (
             vectorEstado.push(pc.estado_pc);
             vectorEstado.push(pc.tiempo_llegada);
             vectorEstado.push(pc.trabajo);
+            vectorEstado.push(pc.tiempo_trabajo);
             vectorEstado.push(pc.tiempo_fin_formateo);
             existe_pc = false;
             cantidad_pcs++;
@@ -888,6 +874,12 @@ const simular = () => {
                 {
                     field: `trabajo_pc${i + 1}`,
                     headerName: `Trabajo (PC${i + 1})`,
+                    maxWidth: 100,
+                    suppressMenu: true,
+                },
+                {
+                    field: `tiempo_trabajo_pc${i + 1}`,
+                    headerName: `Tiempo de trabajo (PC${i + 1})`,
                     maxWidth: 100,
                     suppressMenu: true,
                 },
@@ -1160,12 +1152,13 @@ const crearFila = (vectorEstado) => {
 
     if (vectorEstado.length >= 22) {
         let numero_pc = 0;
-        for (let i = 22; i < vectorEstado.length; i += 4) {
+        for (let i = 22; i < vectorEstado.length; i += 5) {
             numero_pc++;
             aux[`estado_pc${numero_pc}`] = vectorEstado[i];
             aux[`tiempo_llegada_pc${numero_pc}`] = vectorEstado[i + 1];
             aux[`trabajo_pc${numero_pc}`] = vectorEstado[i + 2];
-            aux[`tiempo_fin_formateo_pc${numero_pc}`] = vectorEstado[i + 3];
+            aux[`tiempo_trabajo_pc${numero_pc}`] = vectorEstado[i + 3];
+            aux[`tiempo_fin_formateo_pc${numero_pc}`] = vectorEstado[i + 4];
         }
         fila = { ...fila, ...aux };
     }
