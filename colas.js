@@ -683,8 +683,9 @@ const generacionColas = (
                             ? (vectorEstado[j] = "EIF T2")
                             : (vectorEstado[j] = "EIF T1");
 
+                        // Calculamos el tiempo fin de formateo
                         vectorEstado[j + 4] = truncateDecimals(
-                            reloj + trabajo.tiempo - ult_min_trab_c,
+                            reloj + vectorEstado[j + 3] - ult_min_trab_c,
                             2
                         );
                     } else {
