@@ -728,10 +728,15 @@ const generacionColas = (
                         evento === "Fin tarea T1") ||
                     (vectorEstado[j] == "SR T2" && evento === "Fin tarea T2")
                 ) {
-                    acum_tiempo_permanencia += truncateDecimals(
-                        reloj - vectorEstado[j + 1],
-                        2
-                    );
+                    if (isNaN(vectorEstado[j + 1]) || isNaN(reloj)){
+                        acum_tiempo_permanencia += 0;
+                    }
+                    else{
+                        acum_tiempo_permanencia += truncateDecimals(
+                            reloj - vectorEstado[j + 1],
+                            2
+                        );
+                    }
 
                     total_pc_antendidas++;
 
