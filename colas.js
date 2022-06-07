@@ -488,19 +488,21 @@ const generacionColas = (
                 );
 
                 if (estado_t1 === "Ocupado" && estado_t2 === "Ocupado") {
-                    pc = generarPC(
-                        0,
-                        trabajo,
-                        reloj,
-                        fin_tarea,
-                        ult_min_trab_c
-                    );
-
                     // en el caso que haya 3 equipos en cola, se agrega 1 equipo al acum_pcs
                     // (son las PCs que no pueden ser atendidas en este laboratorio)
                     if (cola === 3) {
+                        existe_pc = false;
                         acum_pcs++;
                     } else {
+                        pc = generarPC(
+                            0,
+                            trabajo,
+                            reloj,
+                            fin_tarea,
+                            ult_min_trab_c
+                        );
+
+                        existe_pc = true;
                         cola++;
                     }
                 } else {
@@ -542,14 +544,14 @@ const generacionColas = (
                             );
                     }
 
+                    existe_pc = true;
+
                     if (trabajo.abrev === "FD") {
                         cola_formateos > 0 && cola_formateos--;
                     } else {
                         cola > 0 && cola--;
                     }
                 }
-
-                existe_pc = true;
             }
 
             // Caso 3 de 3: se da un fin tarea
