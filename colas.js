@@ -591,8 +591,7 @@ const generacionColas = (
                                 ult_min_trab_c
                             );
 
-                        typeof pc_formateo !== "undefined" &&
-                            (vectorEstado[pc_formateo.indice] = "EFF T1");
+                        vectorEstado[pc_formateo.indice] = "EFF T1";
                     } else {
                         [fin_tarea_t2, estado_t2, tiempo_ocupacion_t2] =
                             ocuparTecnicoEtapaFinalFormateo(
@@ -600,8 +599,7 @@ const generacionColas = (
                                 ult_min_trab_c
                             );
 
-                        typeof pc_formateo !== "undefined" &&
-                            (vectorEstado[pc_formateo.indice] = "EFF T2");
+                        vectorEstado[pc_formateo.indice] = "EFF T2";
                     }
 
                     cola_formateos--;
