@@ -319,6 +319,7 @@ const generacionColas = (
     trabajos
 ) => {
     let vectorEstado = [];
+    var startTime = performance.now()
 
     // Variables asociadas a cada elemento del vector estado
     let evento = "";
@@ -660,6 +661,7 @@ const generacionColas = (
             pcs_formateo = [];
             // Actualizacion de estados de PCs
             for (let j = 22; j < vectorEstado.length; j += 5) {
+                if (vectorEstado[j] === "////") continue;
                 let aux = new Pc(
                     j,
                     vectorEstado[j],
@@ -813,7 +815,8 @@ const generacionColas = (
     porc_ocup_t2 = acum_tiempo_ocupacion_t2 / reloj;
     tdPorcOcupT1.innerHTML = truncateDecimals(porc_ocup_t1 * 100, 2) + "%";
     tdPorcOcupT2.innerHTML = truncateDecimals(porc_ocup_t2 * 100, 2) + "%";
-
+    var endTime = performance.now()
+    console.log("Tiempo de ejecucion en la generación de colas (vector estado): " + (endTime - startTime) + " ms");
     return [filas, cantidad_pcs];
 };
 
@@ -822,6 +825,7 @@ const generacionColas = (
  * @returns {void}
  */
 const simular = () => {
+    var startTime = performance.now()
     let tableData = [];
     let columnasPCs = [];
 
@@ -854,7 +858,7 @@ const simular = () => {
 
         // transformar el arreglo de 'vectoresEstado' a objetos 'fila' para ser visualizados en la tabla
         for (let i = 0; i < filas.length; i++) {
-            let fila = crearFila(filas[i], cantidad_pcs);
+            let fila = crearFila(filas[i]);
             tableData.push(fila);
         }
 
@@ -1091,6 +1095,8 @@ const simular = () => {
     gridOptions.columnApi.autoSizeColumns(allColumnIds);
 
     divInfo.style.visibility = "visible";
+    var endTime = performance.now()
+    console.log("Tiempo de ejecución para el creado de la tabla:" + (endTime - startTime) + " ms");
 };
 
 /**
@@ -1155,11 +1161,13 @@ const crearFila = (vectorEstado) => {
         let numero_pc = 0;
         for (let i = 22; i < vectorEstado.length; i += 5) {
             numero_pc++;
-            aux[`estado_pc${numero_pc}`] = vectorEstado[i];
-            aux[`tiempo_llegada_pc${numero_pc}`] = vectorEstado[i + 1];
-            aux[`trabajo_pc${numero_pc}`] = vectorEstado[i + 2];
-            aux[`tiempo_trabajo_pc${numero_pc}`] = vectorEstado[i + 3];
-            aux[`tiempo_fin_formateo_pc${numero_pc}`] = vectorEstado[i + 4];
+            if (vectorEstado[i] !== "////") {
+                aux[`estado_pc${numero_pc}`] = vectorEstado[i];
+                aux[`tiempo_llegada_pc${numero_pc}`] = vectorEstado[i + 1];
+                aux[`trabajo_pc${numero_pc}`] = vectorEstado[i + 2];
+                aux[`tiempo_trabajo_pc${numero_pc}`] = vectorEstado[i + 3];
+                aux[`tiempo_fin_formateo_pc${numero_pc}`] = vectorEstado[i + 4];
+            }
         }
         fila = { ...fila, ...aux };
     }
