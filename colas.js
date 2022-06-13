@@ -660,7 +660,7 @@ const generacionColas = (
 
             pcs_formateo = [];
             // Actualizacion de estados de PCs
-            for (let j = 22; j < vectorEstado.length; j += 5) {
+            for (let j = 23; j < vectorEstado.length; j += 5) {
                 if (vectorEstado[j] === "////") continue;
                 let aux = new Pc(
                     j,
@@ -769,6 +769,7 @@ const generacionColas = (
         vectorEstado[19] = acum_pcs;
         vectorEstado[20] = acum_tiempo_ocupacion_t1.toFixed(2);
         vectorEstado[21] = acum_tiempo_ocupacion_t2.toFixed(2);
+        vectorEstado[22] = total_pc_antendidas;
 
         // En caso que se haya creado una PC, la agregamos al final del vectorEstado
         if (existe_pc) {
@@ -1065,6 +1066,12 @@ const simular = () => {
                     maxWidth: 120,
                     suppressMenu: true,
                 },
+                {
+                    field: "total_pc_antendidas",
+                    headerName: "Total PCs atendidas",
+                    maxWidth: 120,
+                    suppressMenu: true,
+                },
             ],
         },
         {
@@ -1155,11 +1162,12 @@ const crearFila = (vectorEstado) => {
         acum_pcs: vectorEstado[19],
         acum_tiempo_ocupacion_t1: vectorEstado[20],
         acum_tiempo_ocupacion_t2: vectorEstado[21],
+        total_pc_antendidas: vectorEstado[22],
     };
 
-    if (vectorEstado.length >= 22) {
+    if (vectorEstado.length >= 23) {
         let numero_pc = 0;
-        for (let i = 22; i < vectorEstado.length; i += 5) {
+        for (let i = 23; i < vectorEstado.length; i += 5) {
             numero_pc++;
             if (vectorEstado[i] !== "////") {
                 aux[`estado_pc${numero_pc}`] = vectorEstado[i];
