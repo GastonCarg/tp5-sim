@@ -1080,7 +1080,7 @@ const generacionColas = (
     tdPorcOcupT1.innerHTML = truncateDecimals(porc_ocup_t1 * 100, 2) + "%";
     tdPorcOcupT2.innerHTML = truncateDecimals(porc_ocup_t2 * 100, 2) + "%";
     var endTime = performance.now()
-    console.log("Tiempo de ejecucion en la generación de colas (vector estado): " + (endTime - startTime) + " ms");
+    //console.log("Tiempo de ejecucion en la generación de colas (vector estado): " + (endTime - startTime) + " ms");
     return [filas, cantidad_pcs];
 };
 
@@ -1366,7 +1366,7 @@ const simular = () => {
 
     divInfo.style.visibility = "visible";
     var endTime = performance.now()
-    console.log("Tiempo de ejecución para el creado de la tabla:" + (endTime - startTime) + " ms");
+    //console.log("Tiempo de ejecución para el creado de la tabla:" + (endTime - startTime) + " ms");
 };
 
 /**
