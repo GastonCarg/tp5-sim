@@ -426,7 +426,7 @@ const generacionColas = (
 
                 if (estado_t1 === "Ocupado" && estado_t2 === "Ocupado") {
                     // estado se actualiza a esperando etapa fin formateo
-                    vectorEstado[pc_formateo.indice] = "EEFF";
+                    //vectorEstado[pc_formateo.indice] = "EEFF";
 
                     cola_formateos++;
                 } else {
@@ -442,7 +442,7 @@ const generacionColas = (
                             );
 
                         // estado se actualiza a etapa fin formateo
-                        vectorEstado[pc_formateo.indice] = "EFF T1";
+                        //vectorEstado[pc_formateo.indice] = "EFF T1";
                     } else {
                         [fin_tarea_t2, estado_t2, tiempo_ocupacion_t2] =
                             ocuparTecnicoEtapaFinalFormateo(
@@ -451,7 +451,7 @@ const generacionColas = (
                             );
 
                         // estado se actualiza a etapa fin formateo
-                        vectorEstado[pc_formateo.indice] = "EFF T2";
+                        //vectorEstado[pc_formateo.indice] = "EFF T2";
                     }
 
                     cola_formateos > 0 && cola_formateos--;
@@ -466,9 +466,10 @@ const generacionColas = (
             }
 
             // Caso 2 de 3: se da una llegada de PC
-            else if (
+
+            else if ((evento !== "Fin formateo automático") &&(
                 (proxima_llegada < fin_tarea_t1 || fin_tarea_t1 === "-") &&
-                (proxima_llegada < fin_tarea_t2 || fin_tarea_t2 === "-")
+                (proxima_llegada < fin_tarea_t2 || fin_tarea_t2 === "-"))
             ) {
                 evento = "Llegada PC";
                 acum_llegadas_pc++;
@@ -556,11 +557,11 @@ const generacionColas = (
             }
 
             // Caso 3 de 3: se da un fin tarea
-            else if (
+            else if ( (evento !== "Fin formateo automático") &&(
                 fin_tarea_t1 < fin_tarea_t2 ||
                 fin_tarea_t2 === "-" ||
                 fin_tarea_t2 < fin_tarea_t1 ||
-                fin_tarea_t1 === "-"
+                fin_tarea_t1 === "-")
             ) {
                 // determinamos si el fin de tarea corresponde al tecnico 1
                 let esFinTareaT1 =
@@ -582,6 +583,7 @@ const generacionColas = (
                     );
                 }
 
+
                 // Caso 3.1: existe alguna PC en cola de formateo
                 if (cola_formateos > 0) {
                     // ocupamos al tecnico
@@ -592,7 +594,7 @@ const generacionColas = (
                                 ult_min_trab_c
                             );
 
-                        vectorEstado[pc_formateo.indice] = "EFF T1";
+                        //vectorEstado[pc_formateo.indice] = "EFF T1";
                     } else {
                         [fin_tarea_t2, estado_t2, tiempo_ocupacion_t2] =
                             ocuparTecnicoEtapaFinalFormateo(
@@ -600,8 +602,9 @@ const generacionColas = (
                                 ult_min_trab_c
                             );
 
-                        vectorEstado[pc_formateo.indice] = "EFF T2";
+                        //vectorEstado[pc_formateo.indice] = "EFF T2";
                     }
+
 
                     cola_formateos--;
                 }
@@ -660,6 +663,15 @@ const generacionColas = (
 
             pcs_formateo = [];
             // Actualizacion de estados de PCs
+            let estado_auxiliar = "";
+            let estado_auxiliar_j1 = "";
+            let estado_auxiliar_j2 = "";
+            let estado_auxiliar_j3 = "";
+            let estado_auxiliar_j4 = "";
+
+            let bandera_ocupacionT1 = false;
+            let bandera_ocupacionT2 = false;
+
             for (let j = 23; j < vectorEstado.length; j += 5) {
                 if (vectorEstado[j] === "////") continue;
                 let aux = new Pc(
@@ -675,28 +687,207 @@ const generacionColas = (
                     pcs_formateo.push(aux);
                 }
 
+                if ((vectorEstado[j] === "SR T1" || vectorEstado[j] === "SR T2") && evento === "Llegada PC"){
+                    estado_auxiliar = vectorEstado[j];
+                    estado_auxiliar_j1 = vectorEstado[j + 1];
+                    estado_auxiliar_j2 = vectorEstado[j + 2];
+                    estado_auxiliar_j3 = vectorEstado[j + 3];
+                    estado_auxiliar_j4 = vectorEstado[j + 4];
+                }
+
+                else if ((vectorEstado[j] === "SR T2" && evento === "Fin tarea T1") || (vectorEstado[j] === "SR T1" && evento === "Fin tarea T2")){
+                    estado_auxiliar = vectorEstado[j];
+                    estado_auxiliar_j1 = vectorEstado[j + 1];
+                    estado_auxiliar_j2 = vectorEstado[j + 2];
+                    estado_auxiliar_j3 = vectorEstado[j + 3];
+                    estado_auxiliar_j4 = vectorEstado[j + 4];
+                }
+
+                else if ((vectorEstado[j] === "EIF T2" && evento === "Fin tarea T1") || (vectorEstado[j] === "EIF T1" && evento === "Fin tarea T2")){
+                    estado_auxiliar = vectorEstado[j];
+                    estado_auxiliar_j1 = vectorEstado[j + 1];
+                    estado_auxiliar_j2 = vectorEstado[j + 2];
+                    estado_auxiliar_j3 = vectorEstado[j + 3];
+                    estado_auxiliar_j4 = vectorEstado[j + 4];
+                
+                }
+                
+                else if (vectorEstado[j] === "FA" && (evento === "Fin tarea T1" || evento === "Fin tarea T2" || evento === "Llegada PC")){
+                    estado_auxiliar = vectorEstado[j];
+                    estado_auxiliar_j1 = vectorEstado[j + 1];
+                    estado_auxiliar_j2 = vectorEstado[j + 2];
+                    estado_auxiliar_j3 = vectorEstado[j + 3];
+                    estado_auxiliar_j4 = vectorEstado[j + 4];
+                }
+
+
+                else if (vectorEstado[j] === "ER" && evento === "Llegada PC"){
+                    estado_auxiliar = vectorEstado[j];
+                    estado_auxiliar_j1 = vectorEstado[j + 1];
+                    estado_auxiliar_j2 = vectorEstado[j + 2];
+                    estado_auxiliar_j3 = vectorEstado[j + 3];
+                    estado_auxiliar_j4 = vectorEstado[j + 4];
+                }
+
+                else if (vectorEstado[j] === "FA" && evento === "Fin formateo automático"){
+                    if (j === pc_formateo.indice){
+                        if (estado_t1 === "Ocupado" && estado_t2 === "Ocupado") {
+                            // estado se actualiza a esperando etapa fin formateo
+                            //vectorEstado[pc_formateo.indice] = "EEFF";
+                            estado_auxiliar = "EEFF";
+                            estado_auxiliar_j1 = vectorEstado[j + 1];
+                            estado_auxiliar_j2 = vectorEstado[j + 2];
+                            estado_auxiliar_j3 = vectorEstado[j + 3];
+                            estado_auxiliar_j4 = "-";
+                        }
+                        else {
+                            let estaT1Libre =
+                                (estado_t1 === "Libre" && estado_t2 === "Libre") ||
+                                (estado_t1 === "Libre" && estado_t2 === "Ocupado");
+                        
+                            if (estaT1Libre) {
+                                // estado se actualiza a etapa fin formateo
+                                //vectorEstado[pc_formateo.indice] = "EFF T1";
+                                estado_auxiliar = "EFF T1";
+                                estado_auxiliar_j1 = vectorEstado[j + 1];
+                                estado_auxiliar_j2 = vectorEstado[j + 2];
+                                estado_auxiliar_j3 = vectorEstado[j + 3];
+                                estado_auxiliar_j4 = "-";
+                            } else {    
+                                // estado se actualiza a etapa fin formateo
+                                //vectorEstado[pc_formateo.indice] = "EFF T2";
+                                estado_auxiliar = "EFF T2";
+                                estado_auxiliar_j1 = vectorEstado[j + 1];
+                                estado_auxiliar_j2 = vectorEstado[j + 2];
+                                estado_auxiliar_j3 = vectorEstado[j + 3];
+                                estado_auxiliar_j4 = "-";
+                            }
+                        }
+                    }
+
+                    else{
+                        estado_auxiliar = vectorEstado[j];
+                        estado_auxiliar_j1 = vectorEstado[j + 1];
+                        estado_auxiliar_j2 = vectorEstado[j + 2];
+                        estado_auxiliar_j3 = vectorEstado[j + 3];
+                        estado_auxiliar_j4 = vectorEstado[j + 4];
+                    }
+      
+                    
+                        
+                    
+                               
+                
+                              
+                    
+                }
+
+                else if ((vectorEstado[j] === "SR T2" || vectorEstado[j] === "SR T1") && evento === "Fin formateo automático"){
+                    estado_auxiliar = vectorEstado[j];
+                    estado_auxiliar_j1 = vectorEstado[j + 1];
+                    estado_auxiliar_j2 = vectorEstado[j + 2];
+                    estado_auxiliar_j3 = vectorEstado[j + 3];
+                    estado_auxiliar_j4 = vectorEstado[j + 4];
+                }
+
+
+
+
+
                 // Caso A: PC esperando reparacion + fin tarea => etapa inicial formateo ó siendo reparada
                 if (
                     (vectorEstado[j] === "ER" && evento === "Fin tarea T2") ||
                     (vectorEstado[j] === "ER" && evento === "Fin tarea T1")
                 ) {
                     if (vectorEstado[j + 2] === "FD") {
-                        evento === "Fin tarea T2"
-                            ? (vectorEstado[j] = "EIF T2")
-                            : (vectorEstado[j] = "EIF T1");
+                        if (evento === "Fin tarea T2"){
+                            if (bandera_ocupacionT2 === false){
+                                bandera_ocupacionT2 = true;
+                                estado_auxiliar = "EIF T2";
+                                estado_auxiliar_j1 = vectorEstado[j + 1];
+                                estado_auxiliar_j2 = vectorEstado[j + 2];
+                                estado_auxiliar_j3 = vectorEstado[j + 3];
+                                estado_auxiliar_j4 = truncateDecimals(
+                                    reloj + vectorEstado[j + 3] - ult_min_trab_c,
+                                    2
+                                );
+                            }
+                            else{
+                                estado_auxiliar = "ER";
+                                estado_auxiliar_j1 = vectorEstado[j + 1];
+                                estado_auxiliar_j2 = vectorEstado[j + 2];
+                                estado_auxiliar_j3 = vectorEstado[j + 3];
+                                estado_auxiliar_j4 = "-";
+                            }
 
-                        // Calculamos el tiempo fin de formateo
-                        vectorEstado[j + 4] = truncateDecimals(
-                            reloj + vectorEstado[j + 3] - ult_min_trab_c,
-                            2
-                        );
-                    } else {
-                        evento === "Fin tarea T2"
-                            ? (vectorEstado[j] = "SR T2")
-                            : (vectorEstado[j] = "SR T1");
-
-                        vectorEstado[j + 4] = "-";
+                            
+                        }
+                        else {
+                            if (bandera_ocupacionT1 === false){
+                                bandera_ocupacionT1 = true;
+                                estado_auxiliar = "EIF T1";
+                                estado_auxiliar_j1 = vectorEstado[j + 1];
+                                estado_auxiliar_j2 = vectorEstado[j + 2];
+                                estado_auxiliar_j3 = vectorEstado[j + 3];
+                                estado_auxiliar_j4 = truncateDecimals(
+                                    reloj + vectorEstado[j + 3] - ult_min_trab_c,
+                                    2
+                                );
+                            }
+                            else{
+                                estado_auxiliar = "ER";
+                                estado_auxiliar_j1 = vectorEstado[j + 1];
+                                estado_auxiliar_j2 = vectorEstado[j + 2];
+                                estado_auxiliar_j3 = vectorEstado[j + 3];
+                                estado_auxiliar_j4 = "-";
+                            }
+                        }
+                        
+                    } else { 
+                        if (evento === "Fin tarea T2"){
+                            if (bandera_ocupacionT2 === false){
+                                bandera_ocupacionT2 = true;
+                                estado_auxiliar = "SR T2";
+                                estado_auxiliar_j1 = vectorEstado[j + 1];
+                                estado_auxiliar_j2 = vectorEstado[j + 2];
+                                estado_auxiliar_j3 = vectorEstado[j + 3];
+                                estado_auxiliar_j4 = "-";
+                            }
+                            else{
+                                estado_auxiliar = "ER";
+                                estado_auxiliar_j1 = vectorEstado[j + 1];
+                                estado_auxiliar_j2 = vectorEstado[j + 2];
+                                estado_auxiliar_j3 = vectorEstado[j + 3];
+                                estado_auxiliar_j4 = "-";
+                            }
+                        } 
+                            
+                        else{
+                            if (bandera_ocupacionT1 === false){
+                                bandera_ocupacionT1 = true;
+                                estado_auxiliar = "SR T1";
+                                estado_auxiliar_j1 = vectorEstado[j + 1];
+                                estado_auxiliar_j2 = vectorEstado[j + 2];
+                                estado_auxiliar_j3 = vectorEstado[j + 3];
+                                estado_auxiliar_j4 = "-";
+                            }
+                            else{
+                                estado_auxiliar = "ER";
+                                estado_auxiliar_j1 = vectorEstado[j + 1];
+                                estado_auxiliar_j2 = vectorEstado[j + 2];
+                                estado_auxiliar_j3 = vectorEstado[j + 3];
+                                estado_auxiliar_j4 = "-";
+                            }
+                        }
                     }
+                }
+
+                else if (vectorEstado[j] === "EEFF" && evento === "Llegada PC"){
+                    estado_auxiliar = vectorEstado[j];
+                    estado_auxiliar_j1 = vectorEstado[j + 1];
+                    estado_auxiliar_j2 = vectorEstado[j + 2];
+                    estado_auxiliar_j3 = vectorEstado[j + 3];
+                    estado_auxiliar_j4 = vectorEstado[j + 4];
                 }
 
                 // Caso B: PC esperando etapa final formateo + fin tarea => etapa final formateo
@@ -704,11 +895,43 @@ const generacionColas = (
                     (vectorEstado[j] === "EEFF" && evento === "Fin tarea T2") ||
                     (vectorEstado[j] === "EEFF" && evento === "Fin tarea T1")
                 ) {
-                    evento === "Fin tarea T2"
-                        ? (vectorEstado[j] = "EFF T2")
-                        : (vectorEstado[j] = "EFF T1");
+                    if (evento === "Fin tarea T2"){
+                        if (bandera_ocupacionT2 === false){
+                            bandera_ocupacionT2 = true;
+                            estado_auxiliar = "EFF T2"; 
+                            estado_auxiliar_j1 = vectorEstado[j + 1];
+                            estado_auxiliar_j2 = vectorEstado[j + 2];
+                            estado_auxiliar_j3 = vectorEstado[j + 3];
+                            estado_auxiliar_j4 = "-";
+                        }
+                        else{
+                            estado_auxiliar = "EEFF";
+                            estado_auxiliar_j1 = vectorEstado[j + 1];
+                            estado_auxiliar_j2 = vectorEstado[j + 2];
+                            estado_auxiliar_j3 = vectorEstado[j + 3];
+                            estado_auxiliar_j4 = "-";
+                        }
 
-                    vectorEstado[j + 4] = "-";
+                        
+                    }
+
+                    else {
+                        if (bandera_ocupacionT1 === false){
+                            bandera_ocupacionT1 = true;
+                            estado_auxiliar = "EFF T1"; 
+                            estado_auxiliar_j1 = vectorEstado[j + 1];
+                            estado_auxiliar_j2 = vectorEstado[j + 2];
+                            estado_auxiliar_j3 = vectorEstado[j + 3];
+                            estado_auxiliar_j4 = "-";
+                        }
+                        else{
+                            estado_auxiliar = "EEFF";
+                            estado_auxiliar_j1 = vectorEstado[j + 1];
+                            estado_auxiliar_j2 = vectorEstado[j + 2];
+                            estado_auxiliar_j3 = vectorEstado[j + 3];
+                            estado_auxiliar_j4 = "-";
+                        }
+                    }
                 }
 
                 // Caso C: PC etapa inicial formateo + fin tarea => formateo automatico
@@ -717,8 +940,39 @@ const generacionColas = (
                         evento === "Fin tarea T1") ||
                     (vectorEstado[j] === "EIF T2" && evento === "Fin tarea T2")
                 ) {
-                    vectorEstado[j] = "FA";
+                    estado_auxiliar = "FA";
+                    estado_auxiliar_j1 = vectorEstado[j + 1];
+                    estado_auxiliar_j2 = vectorEstado[j + 2];
+                    estado_auxiliar_j3 = vectorEstado[j + 3];
+                    estado_auxiliar_j4 = vectorEstado[j + 4];
                 }
+
+                else if ((vectorEstado[j] === "EIF T1" || vectorEstado[j] === "EIF T2") && (evento === "Llegada PC")){
+                    estado_auxiliar = vectorEstado[j];
+                    estado_auxiliar_j1 = vectorEstado[j + 1];
+                    estado_auxiliar_j2 = vectorEstado[j + 2];
+                    estado_auxiliar_j3 = vectorEstado[j + 3];
+                    estado_auxiliar_j4 = vectorEstado[j + 4];
+                }
+
+                else if ((vectorEstado[j] === "EFF T2" || vectorEstado[j] === "EFF T1") && (evento === "Llegada PC")){
+                    estado_auxiliar = vectorEstado[j];
+                    estado_auxiliar_j1 = vectorEstado[j + 1];
+                    estado_auxiliar_j2 = vectorEstado[j + 2];
+                    estado_auxiliar_j3 = vectorEstado[j + 3];
+                    estado_auxiliar_j4 = vectorEstado[j + 4];
+                }
+
+                else if ((vectorEstado[j] === "EFF T2" && evento === "Fin tarea T1") || 
+                        (vectorEstado[j] === "EFF T1" && evento === "Fin tarea T2")){
+                    estado_auxiliar = vectorEstado[j];
+                    estado_auxiliar_j1 = vectorEstado[j + 1];
+                    estado_auxiliar_j2 = vectorEstado[j + 2];
+                    estado_auxiliar_j3 = vectorEstado[j + 3];
+                    estado_auxiliar_j4 = vectorEstado[j + 4];
+                }
+
+
 
                 // Caso D: (PC etapa final formateo ó PC siendo reparada) + fin tarea => destruccion
                 else if (
@@ -737,12 +991,18 @@ const generacionColas = (
 
                     total_pc_antendidas++;
 
-                    vectorEstado[j] = "////";
-                    vectorEstado[j + 1] = "////";
-                    vectorEstado[j + 2] = "////";
-                    vectorEstado[j + 3] = "////";
-                    vectorEstado[j + 4] = "////";
+                    estado_auxiliar  = "////";
+                    estado_auxiliar_j1 = "////";
+                    estado_auxiliar_j2 = "////";
+                    estado_auxiliar_j3 = "////";
+                    estado_auxiliar_j4 = "////";
                 }
+
+                vectorEstado[j] = estado_auxiliar;
+                vectorEstado[j + 1] = estado_auxiliar_j1;
+                vectorEstado[j + 2] = estado_auxiliar_j2;
+                vectorEstado[j + 3] = estado_auxiliar_j3;
+                vectorEstado[j + 4] = estado_auxiliar_j4;
             }
         }
 
@@ -770,6 +1030,8 @@ const generacionColas = (
         vectorEstado[20] = acum_tiempo_ocupacion_t1.toFixed(2);
         vectorEstado[21] = acum_tiempo_ocupacion_t2.toFixed(2);
         vectorEstado[22] = total_pc_antendidas;
+
+        evento = "";
 
         // En caso que se haya creado una PC, la agregamos al final del vectorEstado
         if (existe_pc) {
@@ -810,6 +1072,7 @@ const generacionColas = (
     porc_equipos_no_atendidos = acum_pcs / acum_llegadas_pc;
     tdPorcPCsSinAtender.innerHTML =
         truncateDecimals(porc_equipos_no_atendidos * 100, 2) + "%";
+    
 
     //Porcentaje de ocupación de los técnicos del laboratorio
     porc_ocup_t1 = acum_tiempo_ocupacion_t1 / reloj;
