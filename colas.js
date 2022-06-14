@@ -2,6 +2,7 @@ const btnSimular = document.getElementById("btnSimular");
 const btnSimDelete = document.getElementById("btnSimDel");
 const tdPromPermanenciaPC = document.getElementById("tdPromPermanenciaPC");
 const tdPorcPCsSinAtender = document.getElementById("tdPorcPCsSinAtender");
+const cantLlegadasPC = document.getElementById("cantLlegadasPC");
 const tdPorcOcupT1 = document.getElementById("tdPorcOcupT1");
 const tdPorcOcupT2 = document.getElementById("tdPorcOcupT2");
 const divInfo = document.getElementById("divInfo");
@@ -362,6 +363,7 @@ const generacionColas = (
 
     // recorrer por la cantidad de filas
     for (let i = 0; i < n; i++) {
+        //console.log(evento);
         // esta bandera sirve para determinar si hay que agregar columnas al final de la tabla
         let existe_pc = false;
 
@@ -467,7 +469,7 @@ const generacionColas = (
 
             // Caso 2 de 3: se da una llegada de PC
 
-            else if ((evento !== "Fin formateo automático") &&(
+            else if ((evento != "Fin formateo automático") &&(
                 (proxima_llegada < fin_tarea_t1 || fin_tarea_t1 === "-") &&
                 (proxima_llegada < fin_tarea_t2 || fin_tarea_t2 === "-"))
             ) {
@@ -557,15 +559,12 @@ const generacionColas = (
             }
 
             // Caso 3 de 3: se da un fin tarea
-            else if ( (evento !== "Fin formateo automático") &&(
-                fin_tarea_t1 < fin_tarea_t2 ||
-                fin_tarea_t2 === "-" ||
-                fin_tarea_t2 < fin_tarea_t1 ||
-                fin_tarea_t1 === "-")
+            else if ( (evento != "Fin formateo automático") &&((fin_tarea_t1 <= fin_tarea_t2 || fin_tarea_t2 === "-" )||
+                                                                (fin_tarea_t2 <= fin_tarea_t1 ||fin_tarea_t1 === "-"))
             ) {
                 // determinamos si el fin de tarea corresponde al tecnico 1
                 let esFinTareaT1 =
-                    fin_tarea_t1 < fin_tarea_t2 || fin_tarea_t2 === "-";
+                    fin_tarea_t1 <= fin_tarea_t2 || fin_tarea_t2 === "-";
 
                 if (esFinTareaT1) {
                     evento = "Fin tarea T1";
@@ -1050,17 +1049,19 @@ const generacionColas = (
         }
 
         //Comparar si el reloj en cada iteracion es mayor que el x ingresado, en ese caso corta la simulacion.
-        vectorReloj.push(reloj);
+        //vectorReloj.push(reloj);
 
-        if (vectorReloj[i] >= x) {
+        if (reloj >= x) {
             break;
         }
     }
 
     // agregar ultima fila en caso que 'hasta' sea menor que la cantidad de filas
-    if (hasta < vectorReloj[vectorReloj.length - 1]) {
+    if (hasta < reloj) {
         filas.push([...vectorEstado]);
     }
+
+    
 
     //Consignas
     //Promedio de permanencia en el laboratorio de un equipo
@@ -1072,6 +1073,8 @@ const generacionColas = (
     porc_equipos_no_atendidos = acum_pcs / acum_llegadas_pc;
     tdPorcPCsSinAtender.innerHTML =
         truncateDecimals(porc_equipos_no_atendidos * 100, 2) + "%";
+    
+    cantLlegadasPC.innerHTML = `Cantidad de llegadas de PC: ${acum_llegadas_pc}`;
     
 
     //Porcentaje de ocupación de los técnicos del laboratorio
