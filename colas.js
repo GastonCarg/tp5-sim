@@ -211,7 +211,7 @@ const generarTrabajos = (probAcum, tiempos_trabajos) => {
 
 const generarProximaLlegada = (reloj) => {
     let rnd = truncateDecimals(Math.random(), 2);
-    let tiempo_entre_llegadas = generadorUniforme(30, 90, rnd);
+    let tiempo_entre_llegadas = generadorUniforme(30, 80, rnd);
     let proxima_llegada = truncateDecimals(tiempo_entre_llegadas + reloj, 2);
 
     return [rnd, tiempo_entre_llegadas, proxima_llegada];
@@ -559,12 +559,12 @@ const generacionColas = (
             }
 
             // Caso 3 de 3: se da un fin tarea
-            else if ( (evento != "Fin formateo automático") &&((fin_tarea_t1 <= fin_tarea_t2 || fin_tarea_t2 === "-" )||
-                                                                (fin_tarea_t2 <= fin_tarea_t1 ||fin_tarea_t1 === "-"))
+            else if ( (evento != "Fin formateo automático") &&((fin_tarea_t1 < fin_tarea_t2 || fin_tarea_t2 === "-" )||
+                                                                (fin_tarea_t2 < fin_tarea_t1 ||fin_tarea_t1 === "-"))
             ) {
                 // determinamos si el fin de tarea corresponde al tecnico 1
                 let esFinTareaT1 =
-                    fin_tarea_t1 <= fin_tarea_t2 || fin_tarea_t2 === "-";
+                    fin_tarea_t1 < fin_tarea_t2 || fin_tarea_t2 === "-";
 
                 if (esFinTareaT1) {
                     evento = "Fin tarea T1";
@@ -798,6 +798,7 @@ const generacionColas = (
                     (vectorEstado[j] === "ER" && evento === "Fin tarea T2") ||
                     (vectorEstado[j] === "ER" && evento === "Fin tarea T1")
                 ) {
+
                     if (vectorEstado[j + 2] === "FD") {
                         if (evento === "Fin tarea T2"){
                             if (bandera_ocupacionT2 === false){
@@ -812,11 +813,11 @@ const generacionColas = (
                                 );
                             }
                             else{
-                                estado_auxiliar = "ER";
+                                estado_auxiliar = vectorEstado[j];
                                 estado_auxiliar_j1 = vectorEstado[j + 1];
                                 estado_auxiliar_j2 = vectorEstado[j + 2];
                                 estado_auxiliar_j3 = vectorEstado[j + 3];
-                                estado_auxiliar_j4 = "-";
+                                estado_auxiliar_j4 = vectorEstado[j + 4];
                             }
 
                             
@@ -834,11 +835,11 @@ const generacionColas = (
                                 );
                             }
                             else{
-                                estado_auxiliar = "ER";
+                                estado_auxiliar = vectorEstado[j];
                                 estado_auxiliar_j1 = vectorEstado[j + 1];
                                 estado_auxiliar_j2 = vectorEstado[j + 2];
                                 estado_auxiliar_j3 = vectorEstado[j + 3];
-                                estado_auxiliar_j4 = "-";
+                                estado_auxiliar_j4 = vectorEstado[j + 4];;
                             }
                         }
                         
@@ -853,11 +854,11 @@ const generacionColas = (
                                 estado_auxiliar_j4 = "-";
                             }
                             else{
-                                estado_auxiliar = "ER";
+                                estado_auxiliar = vectorEstado[j];
                                 estado_auxiliar_j1 = vectorEstado[j + 1];
                                 estado_auxiliar_j2 = vectorEstado[j + 2];
                                 estado_auxiliar_j3 = vectorEstado[j + 3];
-                                estado_auxiliar_j4 = "-";
+                                estado_auxiliar_j4 = vectorEstado[j + 4];
                             }
                         } 
                             
@@ -871,11 +872,11 @@ const generacionColas = (
                                 estado_auxiliar_j4 = "-";
                             }
                             else{
-                                estado_auxiliar = "ER";
+                                estado_auxiliar = vectorEstado[j];
                                 estado_auxiliar_j1 = vectorEstado[j + 1];
                                 estado_auxiliar_j2 = vectorEstado[j + 2];
                                 estado_auxiliar_j3 = vectorEstado[j + 3];
-                                estado_auxiliar_j4 = "-";
+                                estado_auxiliar_j4 = vectorEstado[j + 4];
                             }
                         }
                     }
