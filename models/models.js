@@ -1,22 +1,32 @@
-class Pc {
-    constructor(
-        id,
-        estado,
-        tiempoLlegada,
-        trabajo,
-        tiempoTrabajo,
-        tiempoFinFormateo
-    ) {
+export class Pc {
+    constructor(id, estado, tiempoLlegada, tiempoFinFormateo) {
         this.id = id;
         this.estado = estado;
         this.tiempoLlegada = tiempoLlegada;
-        this.trabajo = trabajo;
-        this.tiempoTrabajo = tiempoTrabajo;
         this.tiempoFinFormateo = tiempoFinFormateo;
+    }
+
+    destruir() {
+        this.estado = "";
+        this.tiempoLlegada = "";
+        this.tiempoFinFormateo = "";
+    }
+
+    enEtapaFinFormateo(nroTecnico) {
+        nroTecnico === 1 ? (this.estado = "EFF T1") : (this.estado = "EFF T2");
+        this.tiempoFinFormateo = "";
+    }
+
+    enReparacion(nroTecnico) {
+        nroTecnico === 1 ? (this.estado = "SR T1") : (this.estado = "SR T2");
+    }
+
+    enEsperaEtapaFinFormateo() {
+        this.estado = "EEFF";
     }
 }
 
-class Trabajo {
+export class Trabajo {
     constructor(prob, tiempo, nombre, abrev) {
         this.prob = prob;
         this.tiempo = tiempo;
@@ -25,15 +35,37 @@ class Trabajo {
     }
 }
 
-class Tecnico {
-    constructor(estado, tiempoOcupacion) {
+export class Tecnico {
+    constructor(estado, tiempoOcupacion, proximoFinTarea) {
         this.estado = estado;
         this.tiempoOcupacion = tiempoOcupacion;
+        this.proximoFinTarea = proximoFinTarea;
+    }
+
+    estaOcupado() {
+        if (this.estado === "Ocupado") {
+            return true;
+        }
+        return false;
+    }
+
+    ocupar(reloj, proximoFinTarea) {
+        this.estado = "Ocupado";
+        this.tiempoOcupacion = reloj;
+        this.proximoFinTarea = proximoFinTarea;
+    }
+
+    liberar() {
+        this.estado = "Libre";
+        this.tiempoOcupacion = "";
+        this.proximoFinTarea = "";
+    }
+
+    obtenerProximoFinTarea() {
+        return this.proximoFinTarea;
+    }
+
+    obtenerTiempoOcupacion() {
+        return this.tiempoOcupacion;
     }
 }
-
-export default {
-    Pc,
-    Trabajo,
-    Tecnico,
-};

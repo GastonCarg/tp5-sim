@@ -1,15 +1,16 @@
-import { generacionColas } from "./simulacion-cola.js";
+import { generacionColas } from "/simulacion-cola.js";
 import {
     calcularProbabilidadAcumulada,
     generarTrabajos,
     transformarVectorEstadoAFila,
-} from "utils/utils.js";
+    truncarDecimales,
+} from "/utils/utils.js";
 
 const btnSimular = document.getElementById("btnSimular");
 const btnSimDelete = document.getElementById("btnSimDel");
 const tdPromPermanenciaPC = document.getElementById("tdPromPermanenciaPC");
 const tdPorcPCsSinAtender = document.getElementById("tdPorcPCsSinAtender");
-const cantLlegadasPC = document.getElementById("cantLlegadasPC");
+const tdCantLlegadasPC = document.getElementById("tdCantLlegadasPC");
 const tdPorcOcupT1 = document.getElementById("tdPorcOcupT1");
 const tdPorcOcupT2 = document.getElementById("tdPorcOcupT2");
 const tdDistFinTarea = document.getElementById("tdDistFinTarea");
@@ -171,7 +172,7 @@ const simular = () => {
     ] = tomarInputs();
 
     try {
-        const [filas, cantidad_pcs] = generacionColas(
+        const [filas, cantidad_pcs, consignas] = generacionColas(
             n,
             x,
             desde,
@@ -182,6 +183,14 @@ const simular = () => {
             ult_min_trab_c,
             trabajos
         );
+
+        tdPromPermanenciaPC.innerHTML =
+            truncarDecimales(consignas[0], 2) + " minutos";
+        tdPorcPCsSinAtender.innerHTML =
+            truncarDecimales(consignas[1] * 100, 2) + "%";
+        tdCantLlegadasPC.innerHTML = consignas[2];
+        tdPorcOcupT1.innerHTML = truncarDecimales(consignas[3] * 100, 2) + "%";
+        tdPorcOcupT2.innerHTML = truncarDecimales(consignas[4] * 100, 2) + "%";
 
         // transformar el arreglo de 'vectoresEstado' a objetos 'fila' para ser visualizados en la tabla
         for (let i = 0; i < filas.length; i++) {
@@ -200,18 +209,6 @@ const simular = () => {
                 {
                     field: `tiempo_llegada_pc${i + 1}`,
                     headerName: `Llegada (PC${i + 1})`,
-                    maxWidth: 100,
-                    suppressMenu: true,
-                },
-                {
-                    field: `trabajo_pc${i + 1}`,
-                    headerName: `Trabajo (PC${i + 1})`,
-                    maxWidth: 100,
-                    suppressMenu: true,
-                },
-                {
-                    field: `tiempo_trabajo_pc${i + 1}`,
-                    headerName: `Tiempo de trabajo (PC${i + 1})`,
                     maxWidth: 100,
                     suppressMenu: true,
                 },
@@ -310,18 +307,6 @@ const simular = () => {
                     maxWidth: 100,
                     suppressMenu: true,
                 },
-                {
-                    field: "proximo_fin_tarea_t1",
-                    headerName: "Próximo fin tarea (T1)",
-                    maxWidth: 110,
-                    suppressMenu: true,
-                },
-                {
-                    field: "proximo_fin_tarea_t2",
-                    headerName: "Próximo fin tarea (T2)",
-                    maxWidth: 110,
-                    suppressMenu: true,
-                },
             ],
         },
         {
@@ -340,6 +325,12 @@ const simular = () => {
                     suppressMenu: true,
                 },
                 {
+                    field: "proximo_fin_tarea_t1",
+                    headerName: "Próximo fin tarea (T1)",
+                    maxWidth: 100,
+                    suppressMenu: true,
+                },
+                {
                     field: "estado_t2",
                     headerName: "Estado (T2)",
                     maxWidth: 100,
@@ -348,6 +339,12 @@ const simular = () => {
                 {
                     field: "tiempo_ocupacion_t2",
                     headerName: "Tiempo ocupación (T2)",
+                    maxWidth: 100,
+                    suppressMenu: true,
+                },
+                {
+                    field: "proximo_fin_tarea_t2",
+                    headerName: "Próximo fin tarea (T2)",
                     maxWidth: 100,
                     suppressMenu: true,
                 },

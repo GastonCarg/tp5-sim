@@ -1,6 +1,6 @@
-import { Trabajo } from "./models/models.js";
+import { Trabajo } from "/models/models.js";
 
-function calcularProbabilidadAcumulada(probs) {
+export function calcularProbabilidadAcumulada(probs) {
     let acu = 0;
     let probs_acum = [];
     for (let i = 0; i < probs.length; i++) {
@@ -11,7 +11,7 @@ function calcularProbabilidadAcumulada(probs) {
     return probs_acum;
 }
 
-function generarTrabajos(probAcum, tiempos_trabajos) {
+export function generarTrabajos(probAcum, tiempos_trabajos) {
     let trabajos = [];
     const nombres_trabajos = [
         "Cambio placa",
@@ -34,17 +34,17 @@ function generarTrabajos(probAcum, tiempos_trabajos) {
     return trabajos;
 }
 
-function generadorUniforme(a, b, rnd) {
+export function generadorUniforme(a, b, rnd) {
     let x = a + rnd * (b - a);
     return truncarDecimales(x, 2);
 }
 
-function truncarDecimales(numero, digitos) {
+export function truncarDecimales(numero, digitos) {
     const multiplier = Math.pow(10, digitos);
     return Math.trunc(numero * multiplier) / multiplier;
 }
 
-function transformarVectorEstadoAFila(vectorEstado) {
+export function transformarVectorEstadoAFila(vectorEstado) {
     let aux = {};
     let fila = {
         n: vectorEstado[0],
@@ -57,31 +57,30 @@ function transformarVectorEstadoAFila(vectorEstado) {
         trabajo: vectorEstado[7],
         rnd_fin_tarea: vectorEstado[8],
         fin_tarea: vectorEstado[9],
-        proximo_fin_tarea_t1: vectorEstado[10],
-        proximo_fin_tarea_t2: vectorEstado[11],
-        estado_t1: vectorEstado[12],
-        tiempo_ocupacion_t1: vectorEstado[13],
+        proximo_fin_tarea: vectorEstado[10],
+        estado_t1: vectorEstado[11],
+        tiempo_ocupacion_t1: vectorEstado[12],
+        proximo_fin_tarea_t1: vectorEstado[13],
         estado_t2: vectorEstado[14],
         tiempo_ocupacion_t2: vectorEstado[15],
-        cola: vectorEstado[16],
-        cola_formateos: vectorEstado[17],
-        acum_tiempo_permanencia: vectorEstado[18],
-        acum_pcs: vectorEstado[19],
-        acum_tiempo_ocupacion_t1: vectorEstado[20],
-        acum_tiempo_ocupacion_t2: vectorEstado[21],
-        total_pc_antendidas: vectorEstado[22],
+        proximo_fin_tarea_t2: vectorEstado[16],
+        cola: vectorEstado[17],
+        cola_formateos: vectorEstado[18],
+        acum_tiempo_permanencia: vectorEstado[19],
+        acum_pcs: vectorEstado[20],
+        acum_tiempo_ocupacion_t1: vectorEstado[21],
+        acum_tiempo_ocupacion_t2: vectorEstado[22],
+        total_pc_antendidas: vectorEstado[23],
     };
 
-    if (vectorEstado.length >= 23) {
+    if (vectorEstado.length >= 24) {
         let numero_pc = 0;
-        for (let i = 23; i < vectorEstado.length; i += 5) {
+        for (let i = 24; i < vectorEstado.length; i += 3) {
             numero_pc++;
-            if (vectorEstado[i] !== "////") {
+            if (vectorEstado[i] !== "") {
                 aux[`estado_pc${numero_pc}`] = vectorEstado[i];
                 aux[`tiempo_llegada_pc${numero_pc}`] = vectorEstado[i + 1];
-                aux[`trabajo_pc${numero_pc}`] = vectorEstado[i + 2];
-                aux[`tiempo_trabajo_pc${numero_pc}`] = vectorEstado[i + 3];
-                aux[`tiempo_fin_formateo_pc${numero_pc}`] = vectorEstado[i + 4];
+                aux[`tiempo_fin_formateo_pc${numero_pc}`] = vectorEstado[i + 2];
             }
         }
         fila = { ...fila, ...aux };
@@ -89,11 +88,3 @@ function transformarVectorEstadoAFila(vectorEstado) {
 
     return fila;
 }
-
-export default {
-    calcularProbabilidadAcumulada,
-    generarTrabajos,
-    generadorUniforme,
-    truncarDecimales,
-    transformarVectorEstadoAFila,
-};
