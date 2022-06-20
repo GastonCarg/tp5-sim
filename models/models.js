@@ -1,7 +1,7 @@
 export class Pc {
     constructor(id, estado, tiempoLlegada, tiempoFinFormateo) {
         this.id = id;
-        this.indice = 23 + this.id * 3 - 2;
+        this.indice = 22 + this.id * 3 - 2;
         this.estado = estado;
         this.tiempoLlegada = tiempoLlegada;
         this.tiempoFinFormateo = tiempoFinFormateo;
@@ -25,6 +25,10 @@ export class Pc {
     enEsperaEtapaFinFormateo() {
         this.estado = "EEFF";
         this.tiempoFinFormateo = "";
+    }
+
+    enFormateoAutomatico() {
+        this.estado = "FA";
     }
 
     obtenerEstado() {

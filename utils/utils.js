@@ -57,25 +57,24 @@ export function transformarVectorEstadoAFila(vectorEstado) {
         trabajo: vectorEstado[7],
         rnd_fin_tarea: vectorEstado[8],
         fin_tarea: vectorEstado[9],
-        proximo_fin_tarea: vectorEstado[10],
-        estado_t1: vectorEstado[11],
-        tiempo_ocupacion_t1: vectorEstado[12],
-        proximo_fin_tarea_t1: vectorEstado[13],
-        estado_t2: vectorEstado[14],
-        tiempo_ocupacion_t2: vectorEstado[15],
-        proximo_fin_tarea_t2: vectorEstado[16],
-        cola: vectorEstado[17],
-        cola_formateos: vectorEstado[18],
-        acum_tiempo_permanencia: vectorEstado[19],
-        acum_pcs: vectorEstado[20],
-        acum_tiempo_ocupacion_t1: vectorEstado[21],
-        acum_tiempo_ocupacion_t2: vectorEstado[22],
-        total_pc_antendidas: vectorEstado[23],
+        estado_t1: vectorEstado[10],
+        tiempo_ocupacion_t1: vectorEstado[11],
+        proximo_fin_tarea_t1: vectorEstado[12],
+        estado_t2: vectorEstado[13],
+        tiempo_ocupacion_t2: vectorEstado[14],
+        proximo_fin_tarea_t2: vectorEstado[15],
+        cola: vectorEstado[16],
+        cola_formateos: vectorEstado[17],
+        acum_tiempo_permanencia: vectorEstado[18],
+        acum_pcs: vectorEstado[19],
+        acum_tiempo_ocupacion_t1: vectorEstado[20],
+        acum_tiempo_ocupacion_t2: vectorEstado[21],
+        total_pc_antendidas: vectorEstado[22],
     };
 
-    if (vectorEstado.length >= 24) {
+    if (vectorEstado.length >= 23) {
         let numero_pc = 0;
-        for (let i = 24; i < vectorEstado.length; i += 3) {
+        for (let i = 23; i < vectorEstado.length; i += 3) {
             numero_pc++;
             if (vectorEstado[i] !== "") {
                 aux[`estado_pc${numero_pc}`] = vectorEstado[i];
