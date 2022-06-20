@@ -1,6 +1,7 @@
 export class Pc {
     constructor(id, estado, tiempoLlegada, tiempoFinFormateo) {
         this.id = id;
+        this.indice = 23 + this.id * 3 - 2;
         this.estado = estado;
         this.tiempoLlegada = tiempoLlegada;
         this.tiempoFinFormateo = tiempoFinFormateo;
@@ -23,6 +24,19 @@ export class Pc {
 
     enEsperaEtapaFinFormateo() {
         this.estado = "EEFF";
+        this.tiempoFinFormateo = "";
+    }
+
+    obtenerEstado() {
+        return this.estado;
+    }
+
+    obtenerTiempoLlegada() {
+        return this.tiempoLlegada;
+    }
+
+    obtenerTiempoFinFormateo() {
+        return this.tiempoFinFormateo;
     }
 }
 
@@ -32,6 +46,10 @@ export class Trabajo {
         this.tiempo = tiempo;
         this.nombre = nombre;
         this.abrev = abrev;
+    }
+
+    obtenerAbrev() {
+        return this.abrev;
     }
 }
 

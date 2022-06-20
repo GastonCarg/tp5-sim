@@ -10,7 +10,7 @@ const generarProximaLlegada = (reloj) => {
 
 const generarProximoTrabajo = (trabajos) => {
     let rnd = truncarDecimales(Math.random(), 2);
-    let trabajo = trabajos.find((trabajo) => trabajo.prob <= rnd);
+    let trabajo = trabajos.find((trabajo) => trabajo.prob >= rnd);
     return [rnd, trabajo];
 };
 
@@ -21,19 +21,14 @@ const generarProximoFinTarea = (
     trabajo,
     prim_min_trab_c
 ) => {
-    let rnd;
-    let fin_tarea;
+    let rnd = truncarDecimales(Math.random(), 2);
+    let fin_tarea =
+        generadorUniforme(distrib_trab_a, distrib_trab_b, rnd) + trabajo.tiempo;
     let proximo_fin_tarea;
 
-    if (trabajo.abrev === "FD") {
-        rnd = "";
-        fin_tarea = prim_min_trab_c;
-        proximo_fin_tarea = reloj + fin_tarea;
+    if (trabajo.obtenerAbrev() === "FD") {
+        proximo_fin_tarea = reloj + prim_min_trab_c;
     } else {
-        rnd = truncarDecimales(Math.random(), 2);
-        fin_tarea =
-            generadorUniforme(distrib_trab_a, distrib_trab_b, rnd) +
-            trabajo.tiempo;
         proximo_fin_tarea = truncarDecimales(fin_tarea + reloj, 2);
     }
 
@@ -54,7 +49,7 @@ const generarPC = (
     let tiempoFinFormateo = "";
 
     if (nroTecnico === 1 || nroTecnico === 2) {
-        if (trabajo.abrev === "FD") {
+        if (trabajo.obtenerAbrev() === "FD") {
             estado = `EIF T${nroTecnico}`;
             tiempoFinFormateo = truncarDecimales(
                 reloj + fin_tarea - ult_min_trab_c,
@@ -66,6 +61,13 @@ const generarPC = (
     }
 
     return new Pc(id, estado, tiempoLlegada, tiempoFinFormateo);
+};
+
+const actualizarVectorEstado = (vectorEstado, pc_formateo) => {
+    vectorEstado[pc_formateo.indice] = pc_formateo.obtenerEstado();
+    vectorEstado[pc_formateo.indice + 1] = pc_formateo.obtenerTiempoLlegada();
+    vectorEstado[pc_formateo.indice + 2] =
+        pc_formateo.obtenerTiempoFinFormateo();
 };
 
 export function generacionColas(
@@ -182,253 +184,328 @@ export function generacionColas(
 
         // Evento 3 en adelante: resto de la simulacion
         else {
-            let pc_formateo = pcs.reduce((pc1, pc2) => {
-                return pc1.tiempoFinFormateo < pc2.tiempoFinFormateo
-                    ? pc1
-                    : pc2;
-            });
-
-            let menor = Math.min(
-                proxima_llegada,
-                tecnico1.obtenerProximoFinTarea(),
-                tecnico2.obtenerProximoFinTarea(),
-                pc_formateo.tiempoFinFormateo
+            let miPc = pcs.find(
+                (pc) => typeof pc.tiempoFinFormateo === "number"
             );
+            let pc_formateo;
 
-            // Caso 1 de 3: se da un fin formateo automatico
-            if (
-                pc_formateo.tiempoFinFormateo < proxima_llegada &&
-                (pc_formateo.tiempoFinFormateo <
-                    tecnico1.obtenerProximoFinTarea() ||
-                    tecnico1.obtenerProximoFinTarea() === "") &&
-                (pc_formateo.tiempoFinFormateo <
-                    tecnico2.obtenerProximoFinTarea() ||
-                    tecnico2.obtenerProximoFinTarea() === "")
-            ) {
-                evento = "Fin formateo automático";
-                reloj = pc_formateo.tiempoFinFormateo;
-
-                if (tecnico1.estaOcupado() && tecnico2.estaOcupado()) {
-                    // estado se actualiza a EEFF
-                    pc_formateo.enEsperaEtapaFinFormateo();
-
-                    cola_formateos++;
-                } else {
-                    if (!tecnico1.estaOcupado()) {
-                        // actualizar estado PC a EFF T1
-                        pc_formateo.enEtapaFinFormateo(1);
-                        tecnico1.ocupar(reloj, ult_min_trab_c + reloj);
-                    } else {
-                        // actualizar estado PC a EFF T2
-                        pc_formateo.enEtapaFinFormateo(2);
-                        tecnico2.ocupar(reloj, ult_min_trab_c + reloj);
+            if (typeof miPc !== "undefined") {
+                let menor = miPc.tiempoFinFormateo;
+                pcs.forEach((pc, i) => {
+                    if (typeof pc.tiempoFinFormateo === "number") {
+                        if (pc.tiempoFinFormateo <= menor) {
+                            menor = pc.tiempoFinFormateo;
+                            pc_formateo = pcs[i];
+                        }
                     }
-
-                    cola_formateos > 0 && cola_formateos--;
-                }
-
-                // No generamos llegada, ni trabajo, ni fin de tarea
-                rnd_llegada = "";
-                llegada = "";
-                rnd_trabajo = "";
-                trabajo = new Trabajo("", "", "", "");
-                rnd_fin_tarea = "";
-                fin_tarea = "";
+                });
             }
 
-            // Caso 2 de 3: se da una llegada PC
-            else if (
-                proxima_llegada < tecnico1.obtenerProximoFinTarea() ||
-                tecnico1.obtenerProximoFinTarea() === "" ||
-                proxima_llegada < tecnico2.obtenerProximoFinTarea() ||
-                tecnico2.obtenerProximoFinTarea() === ""
-            ) {
-                acum_llegadas_pc++;
-                evento = "Llegada PC" + acum_llegadas_pc;
-                reloj = vectorEstado[5];
+            let tiempos = [];
+            if (typeof proxima_llegada === "number") {
+                tiempos.push([proxima_llegada, 0]);
+            }
+            if (typeof tecnico1.obtenerProximoFinTarea() === "number") {
+                tiempos.push([tecnico1.obtenerProximoFinTarea(), 1]);
+            }
+            if (typeof tecnico2.obtenerProximoFinTarea() === "number") {
+                tiempos.push([tecnico2.obtenerProximoFinTarea(), 2]);
+            }
+            if (typeof pc_formateo !== "undefined") {
+                tiempos.push([pc_formateo.tiempoFinFormateo, 3]);
+            }
 
-                // Generamos la proxima llegada de PC
-                [rnd_llegada, llegada, proxima_llegada] =
-                    generarProximaLlegada(reloj);
+            let menor = tiempos[0][0];
+            let idx = 0;
+            for (let i = 0; i < tiempos.length; i++) {
+                if (tiempos[i][0] < menor) {
+                    menor = tiempos[i][0];
+                    idx = tiempos[i][1];
+                }
+            }
 
-                // Caso 2.1: ambos tecnicos ocupados
-                if (tecnico1.estaOcupado() && tecnico2.estaOcupado()) {
-                    // No generamos el proximo trabajo ni el proximo fin de tarea
+            console.log(menor);
+
+            // Evento
+            if (idx === 0) {
+                evento = "Llegada PC";
+            }
+            if (idx === 1 || idx === 2) {
+                evento = "Fin tarea";
+            }
+            if (idx === 3) {
+                evento = "Fin formateo automático";
+            }
+
+            switch (evento) {
+                case "Llegada PC":
+                    acum_llegadas_pc++;
+                    evento = "Llegada PC" + acum_llegadas_pc;
+                    reloj = vectorEstado[5];
+
+                    // Generamos la proxima llegada de PC
+                    [rnd_llegada, llegada, proxima_llegada] =
+                        generarProximaLlegada(reloj);
+
+                    // Caso 2.1: ambos tecnicos ocupados
+                    if (tecnico1.estaOcupado() && tecnico2.estaOcupado()) {
+                        // en el caso que haya 3 equipos en cola, se agrega 1 equipo al acum_pcs
+                        // (son las PCs que no pueden ser atendidas en este laboratorio)
+                        if (cola === 3) {
+                            existe_pc = false;
+                            acum_pcs_sin_atender++;
+                        } else {
+                            // Generamos PC 'ER'
+                            pc = generarPC(
+                                acum_llegadas_pc,
+                                0,
+                                trabajo,
+                                reloj,
+                                fin_tarea,
+                                ult_min_trab_c
+                            );
+
+                            pcs.push(pc);
+
+                            existe_pc = true;
+                            cola++;
+                        }
+
+                        // No generamos el proximo trabajo ni el proximo fin de tarea
+                        rnd_trabajo = "";
+                        trabajo = new Trabajo("", "", "", "");
+                        rnd_fin_tarea = "";
+                        fin_tarea = "";
+                    }
+
+                    // Caso 2.2: alguno de los tecnicos libre
+                    else {
+                        // Generamos el proximo trabajo
+                        [rnd_trabajo, trabajo] =
+                            generarProximoTrabajo(trabajos);
+
+                        // Generamos el proximo fin de tarea
+                        [rnd_fin_tarea, fin_tarea, proximo_fin_tarea] =
+                            generarProximoFinTarea(
+                                reloj,
+                                distrib_trab_a,
+                                distrib_trab_b,
+                                trabajo,
+                                prim_min_trab_c
+                            );
+
+                        // Determinar cual tecnico toma el trabajo
+                        if (!tecnico1.estaOcupado()) {
+                            pc = generarPC(
+                                acum_llegadas_pc,
+                                1,
+                                trabajo,
+                                reloj,
+                                fin_tarea,
+                                ult_min_trab_c
+                            );
+
+                            tecnico1.ocupar(reloj, proximo_fin_tarea);
+                        } else {
+                            pc = generarPC(
+                                acum_llegadas_pc,
+                                2,
+                                trabajo,
+                                reloj,
+                                fin_tarea,
+                                ult_min_trab_c
+                            );
+
+                            tecnico2.ocupar(reloj, proximo_fin_tarea);
+                        }
+
+                        existe_pc = true;
+
+                        if (trabajo.obtenerAbrev() === "FD") {
+                            cola_formateos > 0 && cola_formateos--;
+                        } else {
+                            cola > 0 && cola--;
+                        }
+                    }
+                    break;
+
+                case "Fin tarea":
+                    //reloj = proximo_fin_tarea;
+                    // Determinamos cual tecnico terminó la tarea
+                    let esFinTareaT1 =
+                        (!tecnico1.obtenerProximoFinTarea() === "" &&
+                            tecnico1.obtenerProximoFinTarea() <
+                                tecnico2.obtenerProximoFinTarea()) ||
+                        tecnico2.obtenerProximoFinTarea() === "";
+
+                    // Actualizamos evento, reloj y acum_tiempo_ocupacion segun corresponda
+                    if (esFinTareaT1) {
+                        evento = "Fin tarea T1";
+                        reloj = proximo_fin_tarea;
+                        acum_tiempo_ocupacion_t1 += truncarDecimales(
+                            reloj - tecnico1.obtenerTiempoOcupacion(),
+                            2
+                        );
+
+                        // Actualizamos el estado de la PC que estaba en estado 'SR T1'
+                        pcs.some((pc) => {
+                            if (pc.estado === "SR T1") {
+                                pc.destruir();
+                                actualizarVectorEstado(vectorEstado, pc);
+                            }
+                        });
+                    } else {
+                        evento = "Fin tarea T2";
+                        reloj = proximo_fin_tarea;
+                        acum_tiempo_ocupacion_t2 += truncarDecimales(
+                            reloj - tecnico2.obtenerTiempoOcupacion(),
+                            2
+                        );
+
+                        // Actualizamos el estado de la PC que estaba en estado 'SR T2'
+                        pcs.some((pc) => {
+                            if (pc.estado === "SR T2") {
+                                pc.destruir();
+                                actualizarVectorEstado(vectorEstado, pc);
+                            }
+                        });
+                    }
+
+                    // Caso 3.1: existe alguna PC en cola de formateo (PCs listas para la etapa final de formateo)
+                    if (cola_formateos > 0) {
+                        let pc_a_actualizar = pcs.reduce((pc1, pc2) => {
+                            return pc1.tiempoFinFormateo < pc2.tiempoFinFormateo
+                                ? pc1
+                                : pc2;
+                        });
+
+                        // ocupamos al tecnico
+                        if (esFinTareaT1) {
+                            reloj = proximo_fin_tarea;
+
+                            // actualizar estado PC a EFF T1
+                            pc_a_actualizar.enEtapaFinFormateo(1);
+                            actualizarVectorEstado(
+                                vectorEstado,
+                                pc_a_actualizar
+                            );
+                            tecnico1.ocupar(reloj, ult_min_trab_c + reloj);
+                        } else {
+                            reloj = proximo_fin_tarea;
+
+                            // actualizar estado PC a EFF T2
+                            pc_a_actualizar.enEtapaFinFormateo(2);
+                            actualizarVectorEstado(
+                                vectorEstado,
+                                pc_a_actualizar
+                            );
+                            tecnico2.ocupar(reloj, ult_min_trab_c + reloj);
+                        }
+
+                        cola_formateos--;
+                    }
+
+                    // Caso 3.2: existe alguna PC en cola
+                    else if (cola > 0) {
+                        let pc_a_actualizar = pcs.reduce((pc1, pc2) => {
+                            return pc1.tiempoLlegada < pc2.tiempoLlegada &&
+                                (pc1.estado === "ER" || pc2.estado === "ER")
+                                ? pc1
+                                : pc2;
+                        });
+
+                        // Generamos el proximo trabajo
+                        [rnd_trabajo, trabajo] =
+                            generarProximoTrabajo(trabajos);
+
+                        // Generamos el proximo fin de tarea
+                        [rnd_fin_tarea, fin_tarea, proximo_fin_tarea] =
+                            generarProximoFinTarea(
+                                reloj,
+                                distrib_trab_a,
+                                distrib_trab_b,
+                                trabajo,
+                                prim_min_trab_c
+                            );
+
+                        // Ocupamos al tecnico correspondiente
+                        if (esFinTareaT1) {
+                            reloj = proximo_fin_tarea;
+
+                            // actualizar estado PC a SR T1
+                            pc_a_actualizar.enReparacion(1);
+                            actualizarVectorEstado(
+                                vectorEstado,
+                                pc_a_actualizar
+                            );
+                            tecnico1.ocupar(reloj, proximo_fin_tarea);
+                        } else {
+                            reloj = proximo_fin_tarea;
+
+                            // actualizar estado PC a SR T2
+                            pc_a_actualizar.enReparacion(2);
+                            actualizarVectorEstado(
+                                vectorEstado,
+                                pc_a_actualizar
+                            );
+                            tecnico2.ocupar(reloj, proximo_fin_tarea);
+                        }
+
+                        cola--;
+                    }
+
+                    // Caso 3.3: no hay ninguna PC en cola
+                    else {
+                        // Liberamos al tecnico correspondiente
+                        esFinTareaT1 ? tecnico1.liberar() : tecnico2.liberar();
+
+                        // No generamos trabajo, ni fin de tarea
+                        rnd_trabajo = "";
+                        trabajo = new Trabajo("", "", "", "");
+                        rnd_fin_tarea = "";
+                        fin_tarea = "";
+                    }
+
+                    rnd_llegada = "";
+                    llegada = "";
+                    break;
+
+                case "Fin formateo automático":
+                    evento = "Fin formateo automático";
+                    reloj = pc_formateo.tiempoFinFormateo;
+
+                    if (tecnico1.estaOcupado() && tecnico2.estaOcupado()) {
+                        // estado se actualiza a EEFF
+                        pc_formateo.enEsperaEtapaFinFormateo();
+                        actualizarVectorEstado(vectorEstado, pc_formateo);
+
+                        cola_formateos++;
+                    } else {
+                        if (!tecnico1.estaOcupado()) {
+                            // actualizar estado PC a EFF T1
+                            pc_formateo.enEtapaFinFormateo(1);
+                            actualizarVectorEstado(vectorEstado, pc_formateo);
+
+                            tecnico1.ocupar(reloj, ult_min_trab_c + reloj);
+                        } else {
+                            // actualizar estado PC a EFF T2
+                            pc_formateo.enEtapaFinFormateo(2);
+                            actualizarVectorEstado(vectorEstado, pc_formateo);
+
+                            tecnico2.ocupar(reloj, ult_min_trab_c + reloj);
+                        }
+
+                        cola_formateos > 0 && cola_formateos--;
+                    }
+
+                    // No generamos llegada, ni trabajo, ni fin de tarea
+                    rnd_llegada = "";
+                    llegada = "";
                     rnd_trabajo = "";
                     trabajo = new Trabajo("", "", "", "");
                     rnd_fin_tarea = "";
                     fin_tarea = "";
-
-                    // en el caso que haya 3 equipos en cola, se agrega 1 equipo al acum_pcs
-                    // (son las PCs que no pueden ser atendidas en este laboratorio)
-                    if (cola === 3) {
-                        existe_pc = false;
-                        acum_pcs_sin_atender++;
-                    } else {
-                        // Generamos PC 'ER'
-                        pc = generarPC(
-                            acum_llegadas_pc,
-                            0,
-                            trabajo,
-                            reloj,
-                            fin_tarea,
-                            ult_min_trab_c
-                        );
-
-                        pcs.push(pc);
-
-                        existe_pc = true;
-                        cola++;
-                    }
-                }
-                // Caso 2.2: alguno de los tecnicos libre
-                else {
-                    // Generamos el proximo trabajo
-                    [rnd_trabajo, trabajo] = generarProximoTrabajo(trabajos);
-
-                    // Generamos el proximo fin de tarea
-                    [rnd_fin_tarea, fin_tarea, proximo_fin_tarea] =
-                        generarProximoFinTarea(
-                            reloj,
-                            distrib_trab_a,
-                            distrib_trab_b,
-                            trabajo,
-                            prim_min_trab_c
-                        );
-
-                    // Determinar cual tecnico toma el trabajo
-                    if (!tecnico1.estaOcupado()) {
-                        // Actualizar estado de la PC con menor tiempoLlegada a 'SR T1'
-
-                        tecnico1.ocupar(reloj, proximo_fin_tarea);
-                    } else {
-                        // Generamos PC 'SR T2'
-                        pc = generarPC(
-                            2,
-                            trabajo,
-                            reloj,
-                            fin_tarea,
-                            ult_min_trab_c
-                        );
-
-                        tecnico2.ocupar(reloj, proximo_fin_tarea);
-                    }
-
-                    existe_pc = true;
-
-                    if (trabajo.abrev === "FD") {
-                        cola_formateos > 0 && cola_formateos--;
-                    } else {
-                        cola > 0 && cola--;
-                    }
-                }
-            }
-
-            // Caso 3 de 3: se da un fin tarea
-            else if (
-                tecnico1.obtenerProximoFinTarea() < proxima_llegada ||
-                tecnico2.obtenerProximoFinTarea() < proxima_llegada
-            ) {
-                // Determinamos cual tecnico terminó la tarea
-                let esFinTareaT1 =
-                    tecnico1.obtenerProximoFinTarea() <
-                    tecnico2.obtenerProximoFinTarea();
-
-                // Actualizamos evento, reloj y acum_tiempo_ocupacion segun corresponda
-                if (esFinTareaT1) {
-                    evento = "Fin tarea T1";
-                    reloj = vectorEstado[13];
-                    acum_tiempo_ocupacion_t1 += truncarDecimales(
-                        reloj - tecnico1.obtenerTiempoOcupacion(),
-                        2
-                    );
-
-                    // Actualizamos el estado de la PC que estaba en estado 'SR T1'
-                    pcs.some((pc) => {
-                        if (pc.estado === "SR T1") {
-                            pc.destruir();
-                        }
-                    });
-                } else {
-                    evento = "Fin tarea T2";
-                    reloj = vectorEstado[16];
-                    acum_tiempo_ocupacion_t2 += truncarDecimales(
-                        reloj - tecnico2.obtenerTiempoOcupacion(),
-                        2
-                    );
-
-                    // Actualizamos el estado de la PC que estaba en estado 'SR T2'
-                    pcs.some((pc) => {
-                        if (pc.estado === "SR T2") {
-                            pc.destruir();
-                        }
-                    });
-                }
-
-                // Caso 3.1: existe alguna PC en cola de formateo (PCs listas para la etapa final de formateo)
-                if (cola_formateos > 0) {
-                    let pc_a_actualizar = pcs.reduce((pc1, pc2) => {
-                        return pc1.tiempoFinFormateo < pc2.tiempoFinFormateo
-                            ? pc1
-                            : pc2;
-                    });
-
-                    // ocupamos al tecnico
-                    if (esFinTareaT1) {
-                        // actualizar estado PC a EFF T1
-                        pc_a_actualizar.enEtapaFinFormateo(1);
-                        tecnico1.ocupar(reloj, ult_min_trab_c + reloj);
-                    } else {
-                        // actualizar estado PC a EFF T2
-                        pc_a_actualizar.enEtapaFinFormateo(2);
-                        tecnico2.ocupar(reloj, ult_min_trab_c + reloj);
-                    }
-
-                    cola_formateos--;
-                }
-
-                // Caso 3.2: existe alguna PC en cola
-                else if (cola > 0) {
-                    let pc_a_actualizar = pcs.reduce((pc1, pc2) => {
-                        return pc1.tiempoLlegada < pc2.tiempoLlegada &&
-                            (pc1.estado === "ER" || pc2.estado === "ER")
-                            ? pc1
-                            : pc2;
-                    });
-
-                    // Generamos el proximo trabajo
-                    [rnd_trabajo, trabajo] = generarProximoTrabajo(trabajos);
-
-                    // Generamos el proximo fin de tarea
-                    [rnd_fin_tarea, fin_tarea, proximo_fin_tarea] =
-                        generarProximoFinTarea(
-                            reloj,
-                            distrib_trab_a,
-                            distrib_trab_b,
-                            trabajo,
-                            prim_min_trab_c
-                        );
-
-                    // Ocupamos al tecnico correspondiente
-                    if (esFinTareaT1) {
-                        pc_a_actualizar.enReparacion(1);
-                        tecnico1.ocupar(reloj, proximo_fin_tarea);
-                    } else {
-                        pc_a_actualizar.enReparacion(2);
-                        tecnico2.ocupar(reloj, proximo_fin_tarea);
-                    }
-
-                    cola--;
-                }
-
-                // Caso 3.3: no hay ninguna PC en cola
-                else {
-                    // Liberamos al tecnico correspondiente
-                    esFinTareaT1 ? tecnico1.liberar() : tecnico2.liberar();
-                }
-
-                rnd_llegada = "";
-                llegada = "";
+                    break;
             }
         }
 
