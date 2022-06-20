@@ -10,6 +10,7 @@ const generarProximaLlegada = (reloj) => {
 
 const generarProximoTrabajo = (trabajos) => {
     let rnd = truncarDecimales(Math.random(), 2);
+    rnd === 0 && (rnd = 0.01);
     let trabajo = trabajos.find((trabajo) => trabajo.prob >= rnd);
     return [rnd, trabajo];
 };
@@ -379,12 +380,12 @@ export function generacionColas(
                             }
                         });
 
-                        let men = pcsEEFF[0].tiempoFinFormateo;
+                        let men = pcsEEFF[0].tiempoLlegada;
                         let pc_a_actualizar;
 
                         for (let i = 0; i < pcsEEFF.length; i++) {
-                            if (pcsEEFF[i].tiempoFinFormateo <= men) {
-                                men = pcsEEFF[i].tiempoFinFormateo;
+                            if (pcsEEFF[i].tiempoLlegada <= men) {
+                                men = pcsEEFF[i].tiempoLlegada;
                                 pc_a_actualizar = pcsEEFF[i];
                             }
                         }
@@ -419,8 +420,12 @@ export function generacionColas(
                                 prim_min_trab_c
                             );
 
-                        // actualizar estado PC a SR T1
-                        pc_a_actualizar.enReparacion(1);
+                        // actualizar estado PC a SR o EIF segun corresponda
+                        if (trabajo.obtenerAbrev() === "FD") {
+                            pc_a_actualizar.enEtapaInicioFormateo(1);
+                        } else {
+                            pc_a_actualizar.enReparacion(1);
+                        }
                         actualizarVectorEstado(vectorEstado, pc_a_actualizar);
 
                         // ocupamos al tecnico
@@ -492,12 +497,12 @@ export function generacionColas(
                             }
                         });
 
-                        let men = pcsEEFF[0].tiempoFinFormateo;
+                        let men = pcsEEFF[0].tiempoLlegada;
                         let pc_a_actualizar;
 
                         for (let i = 0; i < pcsEEFF.length; i++) {
-                            if (pcsEEFF[i].tiempoFinFormateo <= men) {
-                                men = pcsEEFF[i].tiempoFinFormateo;
+                            if (pcsEEFF[i].tiempoLlegada <= men) {
+                                men = pcsEEFF[i].tiempoLlegada;
                                 pc_a_actualizar = pcsEEFF[i];
                             }
                         }
@@ -532,8 +537,12 @@ export function generacionColas(
                                 prim_min_trab_c
                             );
 
-                        // actualizar estado PC a SR T2
-                        pc_a_actualizar.enReparacion(2);
+                        // actualizar estado PC a SR o EIF segun corresponda
+                        if (trabajo.obtenerAbrev() === "FD") {
+                            pc_a_actualizar.enEtapaInicioFormateo(2);
+                        } else {
+                            pc_a_actualizar.enReparacion(2);
+                        }
                         actualizarVectorEstado(vectorEstado, pc_a_actualizar);
 
                         // liberamos al tecnico
@@ -601,7 +610,7 @@ export function generacionColas(
         // Actualizacion del vectorEstado
         vectorEstado[0] = i + 1;
         vectorEstado[1] = evento;
-        vectorEstado[2] = reloj;
+        vectorEstado[2] = typeof reloj === "number" ? reloj.toFixed(2) : reloj;
         vectorEstado[3] = rnd_llegada;
         vectorEstado[4] = llegada;
         vectorEstado[5] = proxima_llegada;
@@ -610,11 +619,23 @@ export function generacionColas(
         vectorEstado[8] = rnd_fin_tarea;
         vectorEstado[9] = fin_tarea;
         vectorEstado[10] = tecnico1.estado;
-        vectorEstado[11] = tecnico1.tiempoOcupacion;
-        vectorEstado[12] = tecnico1.proximoFinTarea;
+        vectorEstado[11] =
+            typeof tecnico1.tiempoOcupacion === "number"
+                ? tecnico1.tiempoOcupacion.toFixed(2)
+                : tecnico1.tiempoOcupacion;
+        vectorEstado[12] =
+            typeof tecnico1.proximoFinTarea === "number"
+                ? tecnico1.proximoFinTarea.toFixed(2)
+                : tecnico1.proximoFinTarea;
         vectorEstado[13] = tecnico2.estado;
-        vectorEstado[14] = tecnico2.tiempoOcupacion;
-        vectorEstado[15] = tecnico2.proximoFinTarea;
+        vectorEstado[14] =
+            typeof tecnico2.tiempoOcupacion === "number"
+                ? tecnico2.tiempoOcupacion.toFixed(2)
+                : tecnico2.tiempoOcupacion;
+        vectorEstado[15] =
+            typeof tecnico2.proximoFinTarea === "number"
+                ? tecnico2.proximoFinTarea.toFixed(2)
+                : tecnico2.proximoFinTarea;
         vectorEstado[16] = cola;
         vectorEstado[17] = cola_formateos;
         vectorEstado[18] = acum_tiempo_permanencia.toFixed(2);
