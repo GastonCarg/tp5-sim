@@ -365,17 +365,48 @@
                 class="ag-theme-alpine my-2"
                 style="height: 700px; width: 100%"
             ></div>
-            <button
-                hidden="hidden"
-                id="btnExportToExcelRandVar"
-                class="btn btn-info"
-                style="margin-bottom: 5px; font-weight: bold"
-            >
-                Exportar a Excel
-            </button>
-            <label id="promPermanencia" style="display: block"></label>
-            <label id="porcSinAtender" style="display: block"></label>
-            <label id="porcOcup" style="display: block"></label>
+            <label id="promPermanencia" style="display: block; margin-top:15px"></label>
+            <label id="porcSinAtender" style="display: block; margin-top:15px"></label>
+            <label id="porcOcup" style="display: block; margin-block:15px"></label>
+            <div id="divObjetosEventos" style="display: none;">
+                <div style="border: 1px solid;">
+                    <div style="display: flex; flex-direction: column;">
+                        <h4>Objetos</h2>
+                        <ul>
+                            <li><h5>Técnico<sub>(i)</sub> (Permanente)</h5></li>
+                            <ul>
+                                <li>i = 1; 2</li>
+                                <li>{Libre; Ocupado}</li>
+                            </ul>
+                            <li><h5>PC<sub>(j)</sub> (Temporal)</h5></li>
+                            <ul>
+                                <li>j = 1; 2; 3; ...;</li>
+                                <li>{Siendo reparada; Esperando reparación; Etapa inicial Formateo; Esperando fin reparación; Etapa final Formateo; En formateo automático}</li>
+                            </ul>
+                        </ul>
+                    </div>
+                </div>
+                <div style="border: 1px solid;">
+                    <div style="display: flex; flex-direction: column;">
+                        <h4>Eventos</h2>
+                        <ul>
+                            <li><h5>Llegada PC</h5></li>
+                            <ul>
+                                <li>U (30';90')</li>
+                            </ul>
+                            <li><h5>Fin tarea T<sub>(k)</sub></h5></li>
+                            <ul>
+                                <li>k = 1; 2</li>
+                                <li>Tiempo trabajo + U(-5';5')</li>
+                            </ul>
+                            <li><h5>Fin formateo automático</h5></li>
+                            <ul>
+                                <li>Constante</li>
+                            </ul>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>

@@ -4,9 +4,7 @@ const lblPromPermanenciaUnEquipo = document.getElementById("promPermanencia");
 const lblPorcEquiposSinAtender = document.getElementById("porcSinAtender");
 const lblPorcOcupTecnico = document.getElementById("porcOcup");
 const eGridDiv = document.getElementById("gridVariable");
-const btnExportToExcelRandVar = document.getElementById(
-    "btnExportToExcelRandVar"
-);
+const divObjetosEventos = document.getElementById("divObjetosEventos");
 let gridOptions = {};
 
 // variable globales
@@ -403,7 +401,7 @@ const generacionColas = (
         // determinamos cual es el evento que sucede (llegada de PC, fin de tarea o fin de formateo)
         else {
             // Caso 3 de 3: fin formateo automatico
-            if (vectorEstado.length > 23) {
+            if (vectorEstado.length > 24) {
                 pcs_formateo.sort((pc1, pc2) => {
                     return pc1.tiempo_fin_formateo - pc2.tiempo_fin_formateo;
                 });
@@ -734,7 +732,7 @@ const generacionColas = (
                 pcs_formateo = [];
                 let tomo_una_pc = false;
                 let tomo_una_pc_formateo = false;
-                for (let j = 23; j < vectorEstado.length; j += 3) {
+                for (let j = 24; j < vectorEstado.length; j += 3) {
                     if (vectorEstado[j] === "////") continue;
                     if (
                         vectorEstado[j + 2] !== "-" &&
@@ -782,11 +780,11 @@ const generacionColas = (
                         if (trabajo.letra === "C" && !tomo_una_pc_formateo) {
                             if (evento === "Fin tarea T2") {
                                 vectorEstado[j] = "Etapa inicial formateo T2";
-                                vectorEstado[j + 2] = reloj + trabajo.tiempo - ult_min_trab_c;
+                                vectorEstado[j + 2] = truncateDecimals(reloj + trabajo.tiempo - ult_min_trab_c, 2);
                             }
                             else {
                                 vectorEstado[j] = "Etapa inicial formateo T1";
-                                vectorEstado[j + 2] = reloj + trabajo.tiempo - ult_min_trab_c;
+                                vectorEstado[j + 2] = truncateDecimals(reloj + trabajo.tiempo - ult_min_trab_c, 2);
                             }
                             tomo_una_pc_formateo = true;
                             tomo_una_pc = true;
@@ -855,6 +853,7 @@ const generacionColas = (
         vectorEstado[20] = acum_tiempo_ocupacion_t1.toFixed(2);
         vectorEstado[21] = acum_tiempo_ocupacion_t2.toFixed(2);
         vectorEstado[22] = total_pc_antendidas;
+        vectorEstado[23] = acum_llegadas_pc;
 
         // En caso que se haya creado una PC, la agregamos al final del vectorEstado
         if (existe_pc) {
@@ -882,17 +881,17 @@ const generacionColas = (
 
     //Consignas
     //Promedio de permanencia en el laboratorio de un equipo
-    prom_permanencia_equipo = acum_tiempo_permanencia / total_pc_antendidas;
+    if (total_pc_antendidas > 0) prom_permanencia_equipo = acum_tiempo_permanencia / total_pc_antendidas;
     lblPromPermanenciaUnEquipo.innerHTML =
         "Promedio de permanencia en el laboratorio de un equipo: " +
         truncateDecimals(prom_permanencia_equipo, 2) +
         " minutos";
 
     //Porcentaje de equipos que no pueden ser atendidos en el laboratorio
-    porc_equipos_no_atendidos = acum_pcs / acum_llegadas_pc;
+    if (acum_llegadas_pc > 0) porc_equipos_no_atendidos = acum_pcs / acum_llegadas_pc;
     lblPorcEquiposSinAtender.innerHTML =
         "Porcentaje de equipos que no pueden ser atendidos en el laboratorio: " +
-        truncateDecimals(porc_equipos_no_atendidos, 2) * 100 +
+        truncateDecimals(porc_equipos_no_atendidos, 4) * 100 +
         "%";
 
     //Porcentaje de ocupación de los técnicos del laboratorio
@@ -901,11 +900,13 @@ const generacionColas = (
     lblPorcOcupTecnico.innerHTML =
         "Porcentaje de ocupación de los técnicos: " +
         "Tecnico1: " +
-        truncateDecimals(porc_ocup_tecnico1, 2) * 100 +
+        truncateDecimals(porc_ocup_tecnico1 * 100, 2) +
         "% - " +
         "Tecnico2: " +
-        truncateDecimals(porc_ocup_tecnico2, 2) * 100 +
+        truncateDecimals(porc_ocup_tecnico2 * 100, 2) +
         "%";
+
+    divObjetosEventos.setAttribute("visibility", "visible");
 
     return [filas, cantidad_pcs];
 };
@@ -1142,6 +1143,18 @@ const simular = () => {
                     maxWidth: 110,
                     suppressMenu: true,
                 },
+                {
+                    field: "total_pc_antendidas",
+                    headerName: "Total de PC atendidas",
+                    maxWidth: 110,
+                    suppressMenu: true,
+                },
+                {
+                    field: "acum_llegadas_pc",
+                    headerName: "Total de llegadas de PC",
+                    maxWidth: 110,
+                    suppressMenu: true,
+                },
             ],
         },
         {
@@ -1170,8 +1183,6 @@ const simular = () => {
         allColumnIds.push(column.getId());
     });
     gridOptions.columnApi.autoSizeColumns(allColumnIds);
-
-    btnExportToExcelRandVar.removeAttribute("hidden");
 };
 
 /**
@@ -1196,6 +1207,7 @@ const truncateDecimals = (number, digits) => {
  * Funcion que se encarga de borrar la tabla
  */
 const borrarTabla = () => {
+    divObjetosEventos.style.display = "block";
     const eGridDiv = document.querySelector("#gridVariable");
 
     let child = eGridDiv.lastElementChild;
@@ -1235,11 +1247,14 @@ const crearFila = (vectorEstado) => {
         acum_pcs: vectorEstado[19],
         acum_tiempo_ocupacion_t1: vectorEstado[20],
         acum_tiempo_ocupacion_t2: vectorEstado[21],
+        total_pc_antendidas: vectorEstado[22],
+        acum_llegadas_pc: vectorEstado[23],
+
     };
 
-    if (vectorEstado.length >= 23) {
+    if (vectorEstado.length >= 24) {
         let numero_pc = 0;
-        for (let i = 23; i < vectorEstado.length; i += 3) {
+        for (let i = 24; i < vectorEstado.length; i += 3) {
             numero_pc++;
             if (vectorEstado[i] !== "////") {
                 // se deben con nombres distintos sino se sobreescriben los datos
@@ -1258,4 +1273,3 @@ const crearFila = (vectorEstado) => {
 // Agregar los eventos a los botones
 btnSimDelete.addEventListener("click", borrarTabla);
 btnSimular.addEventListener("click", simular);
-btnExportToExcelRandVar.addEventListener("click", exportarTablaExcel);
