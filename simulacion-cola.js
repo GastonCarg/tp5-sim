@@ -355,8 +355,12 @@ export function generacionColas(
                                 2
                             );
 
+                            // Destruimos la pc
                             pcs[i].destruir();
                             actualizarVectorEstado(vectorEstado, pcs[i]);
+
+                            // Eliminamos la PC del vector
+                            pcs.splice(i, 1);
 
                             break;
                         } else if (pcs[i].estado === "EIF T1") {
@@ -464,8 +468,12 @@ export function generacionColas(
                                 2
                             );
 
+                            // Destruimos la pc
                             pcs[i].destruir();
                             actualizarVectorEstado(vectorEstado, pcs[i]);
+
+                            // Eliminamos la PC del vector
+                            pcs.splice(i, 1);
 
                             break;
                         } else if (pcs[i].estado === "EIF T2") {

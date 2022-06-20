@@ -172,6 +172,8 @@ const simular = () => {
     ] = tomarInputs();
 
     try {
+        var startTime = performance.now();
+
         const [filas, cantidad_pcs, consignas] = generacionColas(
             n,
             x,
@@ -183,6 +185,11 @@ const simular = () => {
             ult_min_trab_c,
             trabajos
         );
+        var endTime = performance.now();
+
+        // console.log(
+        //     `Tiempo de ejecución de la simulación: ${endTime - startTime}ms`
+        // );
 
         tdPromPermanenciaPC.innerHTML =
             truncarDecimales(consignas[0], 2) + " minutos";
