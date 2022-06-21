@@ -1,3 +1,4 @@
+import euler from "./utils/euler";
 import { generacionColas } from "/simulacion-cola.js";
 import {
     calcularProbabilidadAcumulada,
@@ -173,6 +174,8 @@ const simular = () => {
 
     try {
         var startTime = performance.now();
+
+        const integracionNumerica = euler(h, t0, S0);
 
         const [filas, cantidad_pcs, consignas] = generacionColas(
             n,

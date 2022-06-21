@@ -83,280 +83,112 @@
             Simulación por Colas
         </a>
 
-        <div class="collapse" id="collapseColas">
-            <div class="container-fluid">
-                <hr />
-                <label style="display: block; margin-right: 60px" for="time-sim"
-                    >Tiempo a simular (X, en minutos):</label
-                >
-                <input
-                    id="time-sim"
-                    style="margin: 0.5em"
-                    type="number"
-                    value="2000"
-                />
+        <div class="collapse container-fluid" id="collapseColas">
+            <label for="time-sim">Tiempo a simular (X, en minutos):</label>
+            <input id="time-sim" type="number" value="2000" />
 
-                <label style="display: block; margin-right: 60px" for="n"
-                    >Cantidad de iteraciones a simular (N):</label
-                >
-                <input id="n" style="margin: 0.5em" type="number" value="20" />
+            <label for="n">Cantidad de iteraciones a simular (N):</label>
+            <input id="n" type="number" value="20" />
 
-                <hr />
-                <table>
-                    <tr>
-                        <td>
-                            <strong style="margin-right: 1em">
-                                Probabilidad de los trabajos
-                            </strong>
-                        </td>
-                        <td>
-                            <strong style="margin-right: 1em">
-                                Tiempos de los trabajos (en minutos)</strong
-                            >
-                        </td>
-                        <td>
-                            <strong style="margin-right: 1em"
-                                >Distribucion uniforme trabajos</strong
-                            >
-                        </td>
-                        <td>
-                            <strong style="margin-right: 1em"
-                                >Tiempos de trabajo de formateo</strong
-                            >
-                        </td>
-                    </tr>
+            <hr />
+            <table>
+                <tr>
+                    <th>Probabilidad de los trabajos</th>
+                    <th>Tiempos de los trabajos (en minutos)</th>
+                    <th>Distribución uniforme trabajos</th>
+                    <th>Tiempos de trabajo de formateo</th>
+                </tr>
 
-                    <tr>
-                        <td>
-                            <label
-                                style="display: block; margin-right: 60px"
-                                for="trab-a"
-                                >Cambio de placa:</label
-                            >
-                            <input
-                                id="trab-a"
-                                style="margin: 0.5em"
-                                type="number"
-                                value="0.3"
-                            />
-                        </td>
-                        <td>
-                            <label
-                                style="display: block; margin-right: 60px"
-                                for="time-trab-a"
-                                >Cambio de placa:</label
-                            >
-                            <input
-                                id="time-trab-a"
-                                style="margin: 0.5em"
-                                type="number"
-                                value="120"
-                            />
-                        </td>
-                        <td>
-                            <label
-                                style="display: block; margin-right: 60px"
-                                for="distrib-trab-a"
-                                >A (minutos):</label
-                            >
-                            <input
-                                id="distrib-trab-a"
-                                style="margin: 0.5em"
-                                type="number"
-                                value="-5"
-                            />
-                        </td>
-                        <td>
-                            <label
-                                style="display: block; margin-right: 60px"
-                                for="prim-min-trab-c"
-                                >Primeros minutos:</label
-                            >
-                            <input
-                                id="prim-min-trab-c"
-                                style="margin: 0.5em"
-                                type="number"
-                                value="15"
-                            />
-                        </td>
-                    </tr>
+                <tr>
+                    <td>
+                        <label for="trab-a">Cambio de placa:</label>
+                        <input id="trab-a" type="number" value="0.3" />
+                    </td>
+                    <td>
+                        <label for="time-trab-a">Cambio de placa:</label>
+                        <input id="time-trab-a" type="number" value="120" />
+                    </td>
+                    <td>
+                        <label for="distrib-trab-a">A (minutos):</label>
+                        <input id="distrib-trab-a" type="number" value="-5" />
+                    </td>
+                    <td>
+                        <label for="prim-min-trab-c">Primeros minutos:</label>
+                        <input id="prim-min-trab-c" type="number" value="15" />
+                    </td>
+                </tr>
 
-                    <tr>
-                        <td>
-                            <label
-                                style="display: block; margin-right: 60px"
-                                for="trab-b"
-                                >Ampliacion de memoria:</label
-                            >
-                            <input
-                                id="trab-b"
-                                style="margin: 0.5em"
-                                type="number"
-                                value="0.25"
-                            />
-                        </td>
-                        <td>
-                            <label
-                                style="display: block; margin-right: 60px"
-                                for="time-trab-b"
-                                >Ampliacion de memoria:</label
-                            >
-                            <input
-                                id="time-trab-b"
-                                style="margin: 0.5em"
-                                type="number"
-                                value="60"
-                            />
-                        </td>
-                        <td>
-                            <label
-                                style="display: block; margin-right: 60px"
-                                for="distrib-trab-b"
-                                >B (minutos):</label
-                            >
-                            <input
-                                id="distrib-trab-b"
-                                style="margin: 0.5em"
-                                type="number"
-                                value="5"
-                            />
-                        </td>
-                        <td>
-                            <label
-                                style="display: block; margin-right: 60px"
-                                for="ult-min-trab-c"
-                                >Últimos minutos:</label
-                            >
-                            <input
-                                id="ult-min-trab-c"
-                                style="margin: 0.5em"
-                                type="number"
-                                value="15"
-                            />
-                        </td>
-                    </tr>
+                <tr>
+                    <td>
+                        <label for="trab-b">Ampliacion de memoria:</label>
+                        <input id="trab-b" type="number" value="0.25" />
+                    </td>
+                    <td>
+                        <label for="time-trab-b">Ampliacion de memoria:</label>
+                        <input id="time-trab-b" type="number" value="60" />
+                    </td>
+                    <td>
+                        <label for="distrib-trab-b">B (minutos):</label>
+                        <input id="distrib-trab-b" type="number" value="5" />
+                    </td>
+                    <td>
+                        <label for="ult-min-trab-c">Últimos minutos:</label>
+                        <input id="ult-min-trab-c" type="number" value="15" />
+                    </td>
+                </tr>
 
-                    <tr>
-                        <td>
-                            <label
-                                style="display: block; margin-right: 60px"
-                                for="trab-c"
-                                >Formateo de disco:</label
-                            >
-                            <input
-                                id="trab-c"
-                                style="margin: 0.5em"
-                                type="number"
-                                value="0.15"
-                            />
-                        </td>
-                        <td>
-                            <label
-                                style="display: block; margin-right: 60px"
-                                for="time-trab-c"
-                                >Formateo de disco:</label
-                            >
-                            <input
-                                id="time-trab-c"
-                                style="margin: 0.5em"
-                                type="number"
-                                value="180"
-                            />
-                        </td>
-                    </tr>
+                <tr>
+                    <td>
+                        <label for="trab-c">Formateo de disco:</label>
+                        <input id="trab-c" type="number" value="0.15" />
+                    </td>
+                    <td>
+                        <label for="time-trab-c">Formateo de disco:</label>
+                        <input id="time-trab-c" type="number" value="180" />
+                    </td>
+                </tr>
 
-                    <tr>
-                        <td>
-                            <label
-                                style="display: block; margin-right: 60px"
-                                for="trab-d"
-                                >Agregar CD o DVD:</label
-                            >
-                            <input
-                                id="trab-d"
-                                style="margin: 0.5em"
-                                type="number"
-                                value="0.1"
-                            />
-                        </td>
-                        <td>
-                            <label
-                                style="display: block; margin-right: 60px"
-                                for="time-trab-d"
-                                >Agregar CD o DVD:</label
-                            >
-                            <input
-                                id="time-trab-d"
-                                style="margin: 0.5em"
-                                type="number"
-                                value="60"
-                            />
-                        </td>
-                    </tr>
+                <tr>
+                    <td>
+                        <label for="trab-d">Agregar CD o DVD:</label>
+                        <input id="trab-d" type="number" value="0.1" />
+                    </td>
+                    <td>
+                        <label for="time-trab-d">Agregar CD o DVD:</label>
+                        <input id="time-trab-d" type="number" value="60" />
+                    </td>
+                </tr>
 
-                    <tr>
-                        <td>
-                            <label
-                                style="display: block; margin-right: 60px"
-                                for="trab-e"
-                                >Cambio de memoria:</label
-                            >
-                            <input
-                                id="trab-e"
-                                style="margin: 0.5em"
-                                type="number"
-                                value="0.2"
-                            />
-                        </td>
-                        <td>
-                            <label
-                                style="display: block; margin-right: 60px"
-                                for="time-trab-e"
-                                >Cambio de memoria:</label
-                            >
-                            <input
-                                id="time-trab-e"
-                                style="margin: 0.5em"
-                                type="number"
-                                value="90"
-                            />
-                        </td>
-                    </tr>
-                </table>
+                <tr>
+                    <td>
+                        <label for="trab-e">Cambio de memoria:</label>
+                        <input id="trab-e" type="number" value="0.2" />
+                    </td>
+                    <td>
+                        <label for="time-trab-e">Cambio de memoria:</label>
+                        <input id="time-trab-e" type="number" value="90" />
+                    </td>
+                </tr>
+            </table>
 
-                <hr />
-                <p><b> Filas a mostrar </b></p>
+            <hr />
+            <p><b> Filas a mostrar </b></p>
 
-                <label style="display: block" for="sim-desde"
-                    >Desde (minutos):</label
-                >
-                <input
-                    id="sim-desde"
-                    style="margin: 0.5em"
-                    type="number"
-                    value="0"
-                />
+            <label for="sim-desde">Desde (minutos):</label>
+            <input id="sim-desde" type="number" value="0" />
 
-                <label style="display: block" for="sim-hasta"
-                    >Hasta (minutos):</label
-                >
-                <input
-                    id="sim-hasta"
-                    style="margin: 0.5em"
-                    type="number"
-                    value="1000"
-                />
+            <label for="sim-hasta">Hasta (minutos):</label>
+            <input id="sim-hasta" type="number" value="1000" />
 
-                <hr />
+            <hr />
 
-                <button type="button" class="btn btn-success" id="btnSimular">
-                    Simular
-                </button>
-                <button type="button" class="btn btn-danger" id="btnSimDel">
-                    Reiniciar
-                </button>
-                <hr />
-            </div>
+            <button type="button" class="btn btn-success" id="btnSimular">
+                Simular
+            </button>
+            <button type="button" class="btn btn-danger" id="btnSimDel">
+                Reiniciar
+            </button>
+            <hr />
         </div>
 
         <div class="container-fluid">

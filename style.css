@@ -26,3 +26,12 @@
 #divInfo th {
     border: 1px solid #ccc;
 }
+
+label {
+    display: block;
+    margin-right: 60px;
+}
+
+input {
+    margin: 0.5em;
+}
