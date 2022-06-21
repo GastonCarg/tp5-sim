@@ -422,7 +422,7 @@ export function generacionColas(
 
                         // actualizar estado PC a SR o EIF segun corresponda
                         if (trabajo.obtenerAbrev() === "FD") {
-                            pc_a_actualizar.enEtapaInicioFormateo(1);
+                            pc_a_actualizar.enEtapaInicioFormateo(1, reloj + trabajo.tiempo - ult_min_trab_c);
                         } else {
                             pc_a_actualizar.enReparacion(1);
                         }
@@ -539,7 +539,7 @@ export function generacionColas(
 
                         // actualizar estado PC a SR o EIF segun corresponda
                         if (trabajo.obtenerAbrev() === "FD") {
-                            pc_a_actualizar.enEtapaInicioFormateo(2);
+                            pc_a_actualizar.enEtapaInicioFormateo(2, reloj + trabajo.tiempo - ult_min_trab_c);
                         } else {
                             pc_a_actualizar.enReparacion(2);
                         }
