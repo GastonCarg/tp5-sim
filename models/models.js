@@ -18,8 +18,9 @@ export class Pc {
         this.tiempoFinFormateo = "";
     }
 
-    enEtapaInicioFormateo(nroTecnico) {
+    enEtapaInicioFormateo(nroTecnico, tiempoFinFormateo) {
         nroTecnico === 1 ? (this.estado = "EIF T1") : (this.estado = "EIF T2");
+        this.tiempoFinFormateo = tiempoFinFormateo;
     }
 
     enReparacion(nroTecnico) {

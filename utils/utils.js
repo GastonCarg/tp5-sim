@@ -87,3 +87,14 @@ export function transformarVectorEstadoAFila(vectorEstado) {
 
     return fila;
 }
+
+export function transformarIntegracionNumericaAFila(integracionNumerica) {
+    let fila = {
+        t: integracionNumerica[0],
+        S: integracionNumerica[1],
+        dSdt: integracionNumerica[2],
+        t_prox: integracionNumerica[3],
+        S_prox: integracionNumerica[4],
+    };
+    return fila;
+}

@@ -1,10 +1,11 @@
-import euler from "./utils/euler";
+import euler from "./utils/euler.js";
 import { generacionColas } from "/simulacion-cola.js";
 import {
     calcularProbabilidadAcumulada,
     generarTrabajos,
     transformarVectorEstadoAFila,
     truncarDecimales,
+    transformarIntegracionNumericaAFila,
 } from "/utils/utils.js";
 
 const btnSimular = document.getElementById("btnSimular");
@@ -17,8 +18,10 @@ const tdPorcOcupT2 = document.getElementById("tdPorcOcupT2");
 const tdDistFinTarea = document.getElementById("tdDistFinTarea");
 const divInfo = document.getElementById("divInfo");
 const eGridDiv = document.getElementById("gridVariable");
+const tablaEcDif = document.getElementById("tablaEcDif");
 
 let gridOptions = {};
+let gridOptionsEcDif = {};
 
 const tomarInputs = () => {
     const x = parseFloat(document.getElementById("time-sim").value);
@@ -122,22 +125,14 @@ const tomarInputs = () => {
     tdDistFinTarea.innerHTML = `U(${distrib_trab_a}';${distrib_trab_b}')`;
 
     // Minutos antes y despues del trabajo de formateo
-    const prim_min_trab_c = parseInt(
-        document.getElementById("prim-min-trab-c").value
-    );
+    const h = parseFloat(document.getElementById("h").value);
+    const t0 = parseFloat(document.getElementById("t0").value);
+    const S0 = parseInt(document.getElementById("S0").value);
     const ult_min_trab_c = parseInt(
         document.getElementById("ult-min-trab-c").value
     );
-    if (isNaN(prim_min_trab_c) || isNaN(ult_min_trab_c))
+    if (isNaN(h) || isNaN(t0) || isNaN(ult_min_trab_c))
         return alert("Por favor, ingrese todos los datos.");
-    if (prim_min_trab_c < 0 || ult_min_trab_c < 0)
-        return alert(
-            "Los valores de los primeros y ultimos min deben ser mayores a 0."
-        );
-    if (prim_min_trab_c + ult_min_trab_c >= time_trab_c)
-        return alert(
-            "La suma de los primeros y ultimos minutos debe ser menor al tiempo del trabajo."
-        );
 
     const trabajos = generarTrabajos(prob_acum_trabajos, tiempos_trabajos);
 
@@ -148,7 +143,9 @@ const tomarInputs = () => {
         hasta,
         distrib_trab_a,
         distrib_trab_b,
-        prim_min_trab_c,
+        h,
+        t0,
+        S0,
         ult_min_trab_c,
         trabajos,
     ];
@@ -156,6 +153,7 @@ const tomarInputs = () => {
 
 const simular = () => {
     let tableData = [];
+    let tableDataEcDif = [];
     let columnasPCs = [];
 
     borrarTabla();
@@ -167,7 +165,9 @@ const simular = () => {
         hasta,
         distrib_trab_a,
         distrib_trab_b,
-        prim_min_trab_c,
+        h,
+        t0,
+        S0,
         ult_min_trab_c,
         trabajos,
     ] = tomarInputs();
@@ -176,6 +176,7 @@ const simular = () => {
         var startTime = performance.now();
 
         const integracionNumerica = euler(h, t0, S0);
+        console.log(integracionNumerica);
 
         const [filas, cantidad_pcs, consignas] = generacionColas(
             n,
@@ -184,11 +185,11 @@ const simular = () => {
             hasta,
             distrib_trab_a,
             distrib_trab_b,
-            prim_min_trab_c,
+            integracionNumerica,
             ult_min_trab_c,
             trabajos
         );
-        var endTime = performance.now();
+        //var endTime = performance.now();
 
         // console.log(
         //     `Tiempo de ejecución de la simulación: ${endTime - startTime}ms`
@@ -206,6 +207,13 @@ const simular = () => {
         for (let i = 0; i < filas.length; i++) {
             let fila = transformarVectorEstadoAFila(filas[i]);
             tableData.push(fila);
+        }
+
+        for (let i = 0; i < integracionNumerica.length; i++) {
+            let fila = transformarIntegracionNumericaAFila(
+                integracionNumerica[i]
+            );
+            tableDataEcDif.push(fila);
         }
 
         for (let i = 0; i < cantidad_pcs; i++) {
@@ -425,7 +433,46 @@ const simular = () => {
         rowData: tableData,
     };
 
+    let columnDefsEcDif = [
+        {
+            field: "t",
+            headerName: "t",
+            maxWidth: 200,
+            suppressMenu: true,
+        },
+        {
+            field: "S",
+            headerName: "S",
+            maxWidth: 200,
+            suppressMenu: true,
+        },
+        {
+            field: "dSdt",
+            headerName: "dS/dt",
+            maxWidth: 200,
+            suppressMenu: true,
+        },
+        {
+            field: "t_prox",
+            headerName: "t(i+1)",
+            maxWidth: 200,
+            suppressMenu: true,
+        },
+        {
+            field: "S_prox",
+            headerName: "S(i+1)",
+            maxWidth: 200,
+            suppressMenu: true,
+        },
+    ];
+
+    gridOptionsEcDif = {
+        columnDefs: columnDefsEcDif,
+        rowData: tableDataEcDif,
+    };
+
     new agGrid.Grid(eGridDiv, gridOptions);
+    new agGrid.Grid(tablaEcDif, gridOptionsEcDif);
 
     // setea el tamaño de las columnas para que se adapten al ancho del encabezado de columna
     const allColumnIds = [];
@@ -434,16 +481,26 @@ const simular = () => {
     });
     gridOptions.columnApi.autoSizeColumns(allColumnIds);
 
+    const allColumnIdsEcDif = [];
+    gridOptionsEcDif.columnApi.getAllColumns().forEach((column) => {
+        allColumnIdsEcDif.push(column.getId());
+    });
+    gridOptionsEcDif.columnApi.autoSizeColumns(allColumnIdsEcDif);
+
     divInfo.style.visibility = "visible";
 };
 
 const borrarTabla = () => {
-    const eGridDiv = document.querySelector("#gridVariable");
-
     let child = eGridDiv.lastElementChild;
     while (child) {
         eGridDiv.removeChild(child);
         child = eGridDiv.lastElementChild;
+    }
+
+    let child2 = tablaEcDif.lastElementChild;
+    while (child2) {
+        tablaEcDif.removeChild(child2);
+        child2 = tablaEcDif.lastElementChild;
     }
 
     divInfo.style.visibility = "hidden";

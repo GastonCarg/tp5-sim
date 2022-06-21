@@ -4,7 +4,6 @@
         <meta charset="UTF-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="icon" type="image/x-icon" href="./favicon.ico" />
         <title>SIM - TP6</title>
 
         <!-- CDN libreria tablas -->
@@ -37,7 +36,7 @@
             </div>
         </nav>
 
-        <div class="container mt-2">
+        <div class="container-fluid mt-2">
             <div>
                 <button
                     class="btn btn-primary"
@@ -76,7 +75,7 @@
             <hr />
         </div>
 
-        <div class="container mt-3">
+        <div class="container-fluid mt-3">
             <div class="row">
                 <div class="col-3">
                     <b>Filas a simular</b>
@@ -253,15 +252,34 @@
                 <div class="col-3">
                     <b>Tiempos de trabajo para formateo</b>
                     <div>
-                        <label class="form-label" for="prim-min-trab-c"
-                            >Primeros minutos:</label
+                        <label class="form-label" for="h">h:</label>
+                        <input
+                            class="form-control"
+                            id="h"
+                            type="number"
+                            value="0.1"
+                        />
+                    </div>
+                    <div>
+                        <label class="form-label" for="t0"
+                            >t<sub>0</sub>:</label
                         >
                         <input
                             class="form-control"
-                            id="prim-min-trab-c"
+                            id="t0"
                             type="number"
-                            value="15"
+                            value="0"
                         />
+                    </div>
+                    <div>
+                        <label class="form-label" for="S0"
+                            >S<sub>0</sub>:</label
+                        >
+                        <select class="form-select" id="S0">
+                            <option value="1000">1000</option>
+                            <option value="1500">1500</option>
+                            <option value="2000">2000</option>
+                        </select>
                     </div>
                     <div>
                         <label class="form-label" for="ult-min-trab-c"
@@ -327,12 +345,15 @@
             <hr />
         </div>
 
-        <div class="container-fluid">
+        <div class="container-fluid mt-5">
             <div
                 id="gridVariable"
                 class="ag-theme-alpine my-2"
                 style="height: 700px; width: 100%"
             ></div>
+        </div>
+
+        <div class="container-fluid d-flex justify-content-center">
             <div id="divInfo" class="d-flex my-5" style="visibility: hidden">
                 <div class="me-4">
                     <table>
@@ -424,10 +445,16 @@
                             <td id="tdPorcOcupT2"></td>
                         </tr>
                     </table>
-
-                    <span id="cantLlegadasPC"></span>
                 </div>
             </div>
+        </div>
+
+        <div class="container-fluid d-flex justify-content-center mb-5">
+            <div
+                id="tablaEcDif"
+                class="ag-theme-alpine my-2"
+                style="height: 700px; width: 760px"
+            ></div>
         </div>
 
         <script src="https://unpkg.com/ag-grid-community/dist/ag-grid-community.min.js"></script>

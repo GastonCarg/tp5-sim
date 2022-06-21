@@ -32,10 +32,12 @@ label {
     margin-right: 60px;
 }
 
-input {
+input,
+select {
     margin: 0.5em;
 }
 
-.form-control {
+.form-control,
+.form-select {
     width: 75%;
 }

@@ -20,7 +20,7 @@ const generarProximoFinTarea = (
     distrib_trab_a,
     distrib_trab_b,
     trabajo,
-    prim_min_trab_c
+    integracionNumerica
 ) => {
     let rnd = truncarDecimales(Math.random(), 2);
     let fin_tarea =
@@ -28,7 +28,12 @@ const generarProximoFinTarea = (
     let proximo_fin_tarea;
 
     if (trabajo.obtenerAbrev() === "FD") {
-        proximo_fin_tarea = reloj + prim_min_trab_c;
+        let tiempo = truncarDecimales(
+            integracionNumerica[integracionNumerica.length - 1][0],
+            2
+        );
+        console.log(tiempo);
+        proximo_fin_tarea = reloj + tiempo;
     } else {
         proximo_fin_tarea = truncarDecimales(fin_tarea + reloj, 2);
     }
@@ -78,7 +83,7 @@ export function generacionColas(
     hasta,
     distrib_trab_a,
     distrib_trab_b,
-    prim_min_trab_c,
+    integracionNumerica,
     ult_min_trab_c,
     trabajos
 ) {
@@ -152,7 +157,7 @@ export function generacionColas(
                     distrib_trab_a,
                     distrib_trab_b,
                     trabajo,
-                    prim_min_trab_c
+                    integracionNumerica
                 );
 
             // Determinar cual tecnico toma el trabajo
@@ -294,7 +299,7 @@ export function generacionColas(
                                 distrib_trab_a,
                                 distrib_trab_b,
                                 trabajo,
-                                prim_min_trab_c
+                                integracionNumerica
                             );
 
                         // Determinar cual tecnico toma el trabajo
@@ -417,12 +422,15 @@ export function generacionColas(
                                 distrib_trab_a,
                                 distrib_trab_b,
                                 trabajo,
-                                prim_min_trab_c
+                                integracionNumerica
                             );
 
                         // actualizar estado PC a SR o EIF segun corresponda
                         if (trabajo.obtenerAbrev() === "FD") {
-                            pc_a_actualizar.enEtapaInicioFormateo(1);
+                            pc_a_actualizar.enEtapaInicioFormateo(
+                                1,
+                                reloj + trabajo.tiempo - ult_min_trab_c
+                            );
                         } else {
                             pc_a_actualizar.enReparacion(1);
                         }
@@ -534,12 +542,15 @@ export function generacionColas(
                                 distrib_trab_a,
                                 distrib_trab_b,
                                 trabajo,
-                                prim_min_trab_c
+                                integracionNumerica
                             );
 
                         // actualizar estado PC a SR o EIF segun corresponda
                         if (trabajo.obtenerAbrev() === "FD") {
-                            pc_a_actualizar.enEtapaInicioFormateo(2);
+                            pc_a_actualizar.enEtapaInicioFormateo(
+                                2,
+                                reloj + trabajo.tiempo - ult_min_trab_c
+                            );
                         } else {
                             pc_a_actualizar.enReparacion(2);
                         }
